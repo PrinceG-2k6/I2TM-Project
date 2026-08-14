@@ -1,66 +1,37 @@
-import React, { useState } from 'react';
-import { TrafficProvider, useTraffic } from './context/TrafficContext';
-import { Navbar } from './components/landing/Navbar';
-import { HeroSection } from './components/landing/HeroSection';
-import { FeaturePillars } from './components/landing/FeaturePillars';
-import { SampleCodeSection } from './components/landing/SampleCodeSection';
-import { WhyChooseUs } from './components/landing/WhyChooseUs';
-import { Footer } from './components/landing/Footer';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { TrafficProvider } from './context/TrafficContext';
+import { LandingPage } from './pages/LandingPage';
 import { DashboardLayout } from './components/dashboard/DashboardLayout';
-
-function MainShell() {
-  const [currentView, setCurrentView] = useState('landing'); // 'landing' | 'dashboard'
-  const [dashboardTab, setDashboardTab] = useState('dashboard');
-  const { triggerEmergencyCorridor } = useTraffic();
-
-  const handleOpenDashboard = (tab = 'dashboard') => {
-    setDashboardTab(tab);
-    setCurrentView('dashboard');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleSimulateGreenCorridor = () => {
-    triggerEmergencyCorridor('CRITICAL');
-    setDashboardTab('guards');
-    setCurrentView('dashboard');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleBackToLanding = () => {
-    setCurrentView('landing');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  return (
-    <div className="bg-warm-pattern" style={{ minHeight: '100vh', transition: 'all 0.3s ease' }}>
-      {currentView === 'landing' ? (
-        <div key="landing-view" className="view-fade-in">
-          <Navbar onOpenDashboard={() => handleOpenDashboard('dashboard')} />
-          <HeroSection
-            onOpenDashboard={handleOpenDashboard}
-            onSimulateCorridor={handleSimulateGreenCorridor}
-          />
-          <FeaturePillars onOpenDashboard={handleOpenDashboard} />
-          <SampleCodeSection />
-          <WhyChooseUs />
-          <Footer onOpenDashboard={() => handleOpenDashboard('dashboard')} />
-        </div>
-      ) : (
-        <div key="dashboard-view" className="view-fade-in">
-          <DashboardLayout
-            initialTab={dashboardTab}
-            onNavigateLanding={handleBackToLanding}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
 
 export function App() {
   return (
     <TrafficProvider>
-      <MainShell />
+      <BrowserRouter>
+        <div className="bg-warm-pattern" style={{ minHeight: '100vh', transition: 'all 0.3s ease' }}>
+          <Routes>
+            {/* Landing Page */}
+            <Route path="/" element={<LandingPage />} />
+
+            {/* Main Dashboard & Dynamic Tab Routes */}
+            <Route path="/dashboard" element={<DashboardLayout />} />
+            <Route path="/dashboard/:tab" element={<DashboardLayout />} />
+
+            {/* Direct Alias Routes */}
+            <Route path="/junctions" element={<Navigate to="/dashboard/junctions" replace />} />
+            <Route path="/fyis" element={<Navigate to="/dashboard/fyis" replace />} />
+            <Route path="/map" element={<Navigate to="/dashboard/map" replace />} />
+            <Route path="/features" element={<Navigate to="/dashboard/features" replace />} />
+            <Route path="/services" element={<Navigate to="/dashboard/services" replace />} />
+            <Route path="/guards" element={<Navigate to="/dashboard/guards" replace />} />
+            <Route path="/timeline" element={<Navigate to="/dashboard/timeline" replace />} />
+            <Route path="/settings" element={<Navigate to="/dashboard/settings" replace />} />
+
+            {/* Catch-all Wildcard Route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </BrowserRouter>
     </TrafficProvider>
   );
 }

@@ -26,60 +26,32 @@ export const WhyChooseUs = () => {
   ];
 
   return (
-    <section id="why-us" style={{ padding: '80px 40px', maxWidth: '1280px', margin: '0 auto', textAlign: 'center' }}>
-      <h2 style={{ fontSize: '36px', fontWeight: '800', marginBottom: '16px', color: 'var(--text-main)' }}>
+    <section id="why-us" className="py-20 px-10 max-w-7xl mx-auto text-center">
+      <h2 className="text-4xl font-extrabold mb-4 text-slate-900 font-['Outfit']">
         Why Choose Us
       </h2>
 
-      <p style={{ fontSize: '16px', color: 'var(--text-body)', maxWidth: '600px', margin: '0 auto 48px' }}>
+      <p className="text-base text-slate-600 max-w-xl mx-auto mb-12">
         ASI provides municipal control rooms with end-to-end adaptive intelligence from density sensors to emergency triage.
       </p>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: '24px'
-        }}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {cards.map((c) => {
           const Icon = c.icon;
           return (
             <div
               key={c.title}
-              style={{
-                backgroundColor: 'var(--bg-surface)',
-                border: '1px solid var(--border-warm)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '28px 20px',
-                textAlign: 'left',
-                boxShadow: 'var(--shadow-card)',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between'
-              }}
+              className="bg-white border border-slate-200 rounded-2xl p-7 text-left shadow-sm flex flex-col justify-between hover:shadow-md transition-all"
             >
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 'var(--radius-sm)',
-                  backgroundColor: 'var(--primary-orange-soft)',
-                  color: 'var(--primary-orange-dark)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '20px'
-                }}
-              >
+              <div className="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center mb-5">
                 <Icon size={20} />
               </div>
 
               <div>
-                <h3 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--text-main)', marginBottom: '8px' }}>
+                <h3 className="text-[17px] font-bold text-slate-900 mb-2 font-['Outfit']">
                   {c.title}
                 </h3>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                <p className="text-xs text-slate-500 leading-relaxed">
                   {c.description}
                 </p>
               </div>

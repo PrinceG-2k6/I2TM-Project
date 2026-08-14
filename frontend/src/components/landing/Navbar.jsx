@@ -1,15 +1,35 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { BrandLogo } from '../common/Icons';
 import { Button } from '../common/Button';
 import { ArrowRight } from 'lucide-react';
 
 export const Navbar = ({ onOpenDashboard }) => {
-  const scrollToSection = (id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    } else {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogoClick = () => {
+    if (location.pathname === '/') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      navigate('/');
+    }
+  };
+
+  const scrollToSection = (id) => {
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   };
 
@@ -18,7 +38,7 @@ export const Navbar = ({ onOpenDashboard }) => {
     { label: 'Architecture', action: () => scrollToSection('architecture') },
     { label: 'Why Us', action: () => scrollToSection('why-us') },
     { label: 'Team', action: () => scrollToSection('team') },
-    { label: 'Command Center', action: () => onOpenDashboard && onOpenDashboard('dashboard') }
+    { label: 'Command Center', action: () => onOpenDashboard ? onOpenDashboard('dashboard') : navigate('/dashboard') }
   ];
 
   return (
@@ -37,9 +57,9 @@ export const Navbar = ({ onOpenDashboard }) => {
         color: '#FFFFFF'
       }}
     >
-      {/* Brand Logo (Scrolls to top) */}
+      {/* Brand Logo (Navigates home / scrolls to top) */}
       <div
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        onClick={handleLogoClick}
         style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
       >
         <BrandLogo size={34} color="var(--primary-orange)" />
@@ -84,7 +104,7 @@ export const Navbar = ({ onOpenDashboard }) => {
           variant="primary"
           size="md"
           iconRight={ArrowRight}
-          onClick={onOpenDashboard}
+          onClick={() => onOpenDashboard ? onOpenDashboard('dashboard') : navigate('/dashboard')}
         >
           Get Started
         </Button>
@@ -92,3 +112,5 @@ export const Navbar = ({ onOpenDashboard }) => {
     </nav>
   );
 };
+
+export default Navbar;

@@ -545,7 +545,7 @@ export const MapView = () => {
                   ? '⚡ STAGED PRE-CLEAR: CONTINUOUS GREEN (75s)'
                   : activeNodeData.id === 'J-03' && emergency.active
                   ? '🟡 PRE-CLEARING IN PROGRESS (45s)'
-                  : 'AUTOMATIC ADAPTIVE TIMING'}
+                  : 'Standard Signal Timing'}
               </div>
             </div>
 

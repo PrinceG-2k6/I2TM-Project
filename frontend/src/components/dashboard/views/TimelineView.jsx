@@ -28,7 +28,7 @@ export const TimelineView = () => {
     },
     {
       time: '14:10:00',
-      title: 'Automatic Adaptive Cycle Recalibrated',
+      title: 'Signal Cycle Recalibrated',
       reason: 'Traffic shifted from morning peak to steady afternoon flow across Ring Road node.',
       type: 'SYSTEM',
       badgeVariant: 'info'

@@ -2,12 +2,104 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const TrafficContext = createContext(null);
 
+// Pre-defined Indian Cities Database
+export const INDIAN_CITIES = [
+  {
+    id: 'delhi',
+    name: 'New Delhi',
+    state: 'Delhi NCR',
+    center: { lat: 28.5672, lng: 77.2100 },
+    zoom: 14,
+    junctions: ['J-04 Ring Road South (AIIMS)', 'J-01 Connaught Inner', 'J-02 Aurobindo Marg Node']
+  },
+  {
+    id: 'mumbai',
+    name: 'Mumbai',
+    state: 'Maharashtra',
+    center: { lat: 19.0657, lng: 72.8686 },
+    zoom: 14,
+    junctions: ['M-01 BKC Central Junction', 'M-02 Dadar TT Circle', 'M-03 Marine Drive Flyover']
+  },
+  {
+    id: 'bengaluru',
+    name: 'Bengaluru',
+    state: 'Karnataka',
+    center: { lat: 12.9172, lng: 77.6228 },
+    zoom: 14,
+    junctions: ['B-01 Silk Board Node', 'B-02 HSR Outer Ring Road', 'B-03 Electronic City Toll']
+  },
+  {
+    id: 'hyderabad',
+    name: 'Hyderabad',
+    state: 'Telangana',
+    center: { lat: 17.4435, lng: 78.3772 },
+    zoom: 14,
+    junctions: ['H-01 Hitec City Cyber Towers', 'H-02 Gachibowli Junction', 'H-03 Punjagutta Flyover']
+  },
+  {
+    id: 'chennai',
+    name: 'Chennai',
+    state: 'Tamil Nadu',
+    center: { lat: 13.0067, lng: 80.2022 },
+    zoom: 14,
+    junctions: ['C-01 Kathipara Cloverleaf Node', 'C-02 Anna Salai Arterial', 'C-03 T Nagar Bus Terminus']
+  },
+  {
+    id: 'kolkata',
+    name: 'Kolkata',
+    state: 'West Bengal',
+    center: { lat: 22.5726, lng: 88.3639 },
+    zoom: 14,
+    junctions: ['K-01 Park Street Junction', 'K-02 Salt Lake Sector V Hub', 'K-03 Howrah Bridge Approach']
+  },
+  {
+    id: 'pune',
+    name: 'Pune',
+    state: 'Maharashtra',
+    center: { lat: 18.5308, lng: 73.8474 },
+    zoom: 14,
+    junctions: ['P-01 University Circle Hub', 'P-02 Hinjawadi Phase 1 Circle', 'P-03 Swargate Bus Terminal']
+  },
+  {
+    id: 'ahmedabad',
+    name: 'Ahmedabad',
+    state: 'Gujarat',
+    center: { lat: 23.0225, lng: 72.5714 },
+    zoom: 14,
+    junctions: ['A-01 SG Highway Iskcon Circle', 'A-02 Ashram Road Node', 'A-03 Kalupur Station Circle']
+  },
+  {
+    id: 'jaipur',
+    name: 'Jaipur',
+    state: 'Rajasthan',
+    center: { lat: 26.9124, lng: 75.7873 },
+    zoom: 14,
+    junctions: ['JPR-01 Statue Circle Hub', 'JPR-02 MI Road Junction', 'JPR-03 Ashram Marg Node']
+  },
+  {
+    id: 'chandigarh',
+    name: 'Chandigarh',
+    state: 'Punjab / Haryana',
+    center: { lat: 30.7333, lng: 76.7794 },
+    zoom: 14,
+    junctions: ['CH-01 Tribune Chowk Node', 'CH-02 Sector 17 Plaza Circle', 'CH-03 Press Chowk Junction']
+  },
+  {
+    id: 'lucknow',
+    name: 'Lucknow',
+    state: 'Uttar Pradesh',
+    center: { lat: 26.8467, lng: 80.9462 },
+    zoom: 14,
+    junctions: ['LKO-01 Hazratganj Central Cross', 'LKO-02 Polytechnic Chauraha', 'LKO-03 Awadh Chauraha Node']
+  }
+];
+
 // Emergency Vehicle Presets
 export const EMERGENCY_PRESETS = {
   AMBULANCE: {
     vehicleType: 'AMBULANCE',
     vehicleLabel: 'Ambulance',
-    vehicleIcon: '🚑',
+    vehicleIcon: 'Siren',
     vehicleId: 'DL-01-AMB-889',
     destination: 'AIIMS Trauma Center',
     hospital: 'AIIMS Trauma Center',
@@ -19,7 +111,7 @@ export const EMERGENCY_PRESETS = {
   FIRE: {
     vehicleType: 'FIRE',
     vehicleLabel: 'Fire Engine',
-    vehicleIcon: '🚒',
+    vehicleIcon: 'Flame',
     vehicleId: 'DL-02-FIRE-101',
     destination: 'Connaught Commercial Hub',
     hospital: 'Connaught Commercial Hub',
@@ -31,7 +123,7 @@ export const EMERGENCY_PRESETS = {
   POLICE: {
     vehicleType: 'POLICE',
     vehicleLabel: 'Police Patrol',
-    vehicleIcon: '🚓',
+    vehicleIcon: 'ShieldAlert',
     vehicleId: 'DL-01-POL-999',
     destination: 'VIP Outer Ring Escort',
     hospital: 'VIP Outer Ring Escort',
@@ -42,65 +134,146 @@ export const EMERGENCY_PRESETS = {
   }
 };
 
-// Junction Preset Profiles
-const JUNCTION_PROFILES = {
-  'J-04 Ring Road South': {
-    name: 'J-04 Ring Road South',
-    city: 'New Delhi',
-    approaches: {
-      North: { name: 'North Ring Approach', vehicleCount: 42, capacity: 50, densityPct: 84.0, status: 'HIGH', currentLight: 'RED', greenSec: 35, avgSpeed: 18.2 },
-      South: { name: 'South Flyover Connector', vehicleCount: 21, capacity: 50, densityPct: 42.0, status: 'MEDIUM', currentLight: 'RED', greenSec: 25, avgSpeed: 34.0 },
-      East: { name: 'East Commercial Arterial', vehicleCount: 48, capacity: 50, densityPct: 96.0, status: 'CRITICAL', currentLight: 'GREEN', greenSec: 55, avgSpeed: 9.5 },
-      West: { name: 'West Residential Feeder', vehicleCount: 12, capacity: 50, densityPct: 24.0, status: 'LOW', currentLight: 'RED', greenSec: 15, avgSpeed: 42.1 }
-    }
-  },
-  'J-01 Connaught Inner': {
-    name: 'J-01 Connaught Inner',
-    city: 'Central Delhi',
-    approaches: {
-      North: { name: 'Radial Road 1', vehicleCount: 35, capacity: 50, densityPct: 70.0, status: 'HIGH', currentLight: 'GREEN', greenSec: 40, avgSpeed: 22.0 },
-      South: { name: 'Radial Road 4', vehicleCount: 18, capacity: 50, densityPct: 36.0, status: 'LOW', currentLight: 'RED', greenSec: 20, avgSpeed: 38.5 },
-      East: { name: 'Barakhamba Radial', vehicleCount: 44, capacity: 50, densityPct: 88.0, status: 'CRITICAL', currentLight: 'RED', greenSec: 45, avgSpeed: 12.0 },
-      West: { name: 'Parliament St Feeder', vehicleCount: 25, capacity: 50, densityPct: 50.0, status: 'MEDIUM', currentLight: 'RED', greenSec: 25, avgSpeed: 29.0 }
-    }
-  },
-  'J-02 AIIMS Intersection': {
-    name: 'J-02 AIIMS Intersection',
-    city: 'South Delhi (Emergency Node)',
-    approaches: {
-      North: { name: 'Aurobindo Marg North', vehicleCount: 47, capacity: 50, densityPct: 94.0, status: 'CRITICAL', currentLight: 'RED', greenSec: 50, avgSpeed: 8.0 },
-      South: { name: 'AIIMS Emergency Flyover', vehicleCount: 15, capacity: 50, densityPct: 30.0, status: 'LOW', currentLight: 'GREEN', greenSec: 45, avgSpeed: 45.0 },
-      East: { name: 'Ring Road Eastbound', vehicleCount: 39, capacity: 50, densityPct: 78.0, status: 'HIGH', currentLight: 'RED', greenSec: 35, avgSpeed: 16.5 },
-      West: { name: 'Safdarjung Corridor', vehicleCount: 22, capacity: 50, densityPct: 44.0, status: 'MEDIUM', currentLight: 'RED', greenSec: 25, avgSpeed: 31.0 }
-    }
-  },
-  'J-08 Silk Board Node': {
-    name: 'J-08 Silk Board Node',
-    city: 'Bengaluru Outer Ring',
-    approaches: {
-      North: { name: 'Hosur Road Inbound', vehicleCount: 49, capacity: 50, densityPct: 98.0, status: 'CRITICAL', currentLight: 'GREEN', greenSec: 60, avgSpeed: 6.2 },
-      South: { name: 'Electronic City Flyover', vehicleCount: 41, capacity: 50, densityPct: 82.0, status: 'HIGH', currentLight: 'RED', greenSec: 35, avgSpeed: 14.0 },
-      East: { name: 'BTM Layout Connector', vehicleCount: 33, capacity: 50, densityPct: 66.0, status: 'HIGH', currentLight: 'RED', greenSec: 30, avgSpeed: 19.0 },
-      West: { name: 'HSR Layout Feeder', vehicleCount: 28, capacity: 50, densityPct: 56.0, status: 'MEDIUM', currentLight: 'RED', greenSec: 25, avgSpeed: 26.0 }
-    }
-  }
-};
-
 export const TrafficProvider = ({ children }) => {
+  // Active City & Location State (Default New Delhi)
+  const [activeCity, setActiveCity] = useState(INDIAN_CITIES[0]);
+  const [cityCenter, setCityCenter] = useState(INDIAN_CITIES[0].center);
+  const [userLocationDetected, setUserLocationDetected] = useState(false);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+
+  // Layer Visibility Toggles (Shared across Topbar & Map Views)
+  const [showCameras, setShowCameras] = useState(true);
+  const [showSignals, setShowSignals] = useState(true);
+  const [showCorridor, setShowCorridor] = useState(true);
+
   // Junction & Mode
-  const [selectedJunction, setSelectedJunction] = useState('J-04 Ring Road South');
+  const [selectedJunction, setSelectedJunction] = useState('J-04 Ring Road South (AIIMS)');
   const [environment, setEnvironment] = useState('Prod');
   const [isLiveSimulating, setIsLiveSimulating] = useState(true);
 
-  // 4 Junction Approaches
-  const [approaches, setApproaches] = useState(JUNCTION_PROFILES['J-04 Ring Road South'].approaches);
+  // 4 Junction Approaches (Dynamic calculation based on density)
+  const [approaches, setApproaches] = useState({
+    North: { name: 'North Approach Corridor', vehicleCount: 42, capacity: 50, densityPct: 84.0, status: 'HIGH', currentLight: 'RED', greenSec: 35, avgSpeed: 18.2 },
+    South: { name: 'South Flyover Connector', vehicleCount: 21, capacity: 50, densityPct: 42.0, status: 'MEDIUM', currentLight: 'RED', greenSec: 25, avgSpeed: 34.0 },
+    East: { name: 'East Commercial Arterial', vehicleCount: 48, capacity: 50, densityPct: 96.0, status: 'CRITICAL', currentLight: 'GREEN', greenSec: 55, avgSpeed: 9.5 },
+    West: { name: 'West Residential Feeder', vehicleCount: 12, capacity: 50, densityPct: 24.0, status: 'LOW', currentLight: 'RED', greenSec: 15, avgSpeed: 42.1 }
+  });
+
+  // Automatically detect user location on initial load
+  const detectUserLocation = () => {
+    if (!navigator.geolocation) return;
+    setIsDetectingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+
+        // Find nearest predefined Indian city
+        let minDistance = Infinity;
+        let nearestCity = null;
+
+        INDIAN_CITIES.forEach((city) => {
+          const dist = Math.hypot(city.center.lat - latitude, city.center.lng - longitude);
+          if (dist < minDistance) {
+            minDistance = dist;
+            nearestCity = city;
+          }
+        });
+
+        // If user is within ~300km of a known city
+        if (nearestCity && minDistance < 3.5) {
+          setActiveCity({
+            ...nearestCity,
+            name: `${nearestCity.name} (Your Location)`
+          });
+          setCityCenter(nearestCity.center);
+          setSelectedJunction(nearestCity.junctions[0]);
+        } else {
+          // Custom Indian coordinate location
+          const customCity = {
+            id: 'live-user-location',
+            name: 'Live Detected Location',
+            state: 'India',
+            center: { lat: latitude, lng: longitude },
+            zoom: 14,
+            junctions: ['Local Central Junction']
+          };
+          setActiveCity(customCity);
+          setCityCenter({ lat: latitude, lng: longitude });
+          setSelectedJunction('Local Central Junction');
+        }
+
+        setUserLocationDetected(true);
+        setIsDetectingLocation(false);
+      },
+      (error) => {
+        console.warn('Geolocation access denied or unavailable. Using default city (New Delhi):', error);
+        setIsDetectingLocation(false);
+      },
+      { timeout: 8000, maximumAge: 60000 }
+    );
+  };
+
+  useEffect(() => {
+    detectUserLocation();
+  }, []);
+
+  // Switch City Handler (Predefined or Custom Search)
+  const handleSelectCity = (cityObj) => {
+    setActiveCity(cityObj);
+    setCityCenter(cityObj.center);
+    if (cityObj.junctions && cityObj.junctions.length > 0) {
+      setSelectedJunction(cityObj.junctions[0]);
+    } else {
+      setSelectedJunction(`${cityObj.name} Central Junction`);
+    }
+  };
+
+  // Search City by text query
+  const handleSearchCityQuery = async (queryText) => {
+    if (!queryText || !queryText.trim()) return;
+    const cleanQuery = queryText.trim().toLowerCase();
+
+    // 1. Search in pre-built catalog
+    const matchedCatalogCity = INDIAN_CITIES.find(
+      (c) => c.name.toLowerCase().includes(cleanQuery) || c.state.toLowerCase().includes(cleanQuery)
+    );
+
+    if (matchedCatalogCity) {
+      handleSelectCity(matchedCatalogCity);
+      return matchedCatalogCity;
+    }
+
+    // 2. Geocode custom Indian city query via Nominatim / OpenStreetMap
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          queryText + ', India'
+        )}`
+      );
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const topResult = data[0];
+        const newCity = {
+          id: `custom-${cleanQuery}`,
+          name: topResult.display_name.split(',')[0],
+          state: topResult.display_name.split(',')[1] || 'India',
+          center: { lat: parseFloat(topResult.lat), lng: parseFloat(topResult.lon) },
+          zoom: 14,
+          junctions: [`${topResult.display_name.split(',')[0]} Main Junction`]
+        };
+        handleSelectCity(newCity);
+        return newCity;
+      }
+    } catch (err) {
+      console.warn('Custom geocoding failed:', err);
+    }
+    return null;
+  };
 
   // Switch Junction Handler
   const handleSelectJunction = (junctionName) => {
     setSelectedJunction(junctionName);
-    if (JUNCTION_PROFILES[junctionName]) {
-      setApproaches(JUNCTION_PROFILES[junctionName].approaches);
-    }
   };
 
   // Emergency & Green Corridor Triage State
@@ -111,13 +284,13 @@ export const TrafficProvider = ({ children }) => {
     vehicleIcon: '🚑',
     ambulanceId: 'DL-01-AMB-889',
     vehicleId: 'DL-01-AMB-889',
-    patientSeverity: 'CRITICAL', // 'CRITICAL' | 'SERIOUS' | 'STABLE'
-    triageLevel: 'RED', // 'RED' | 'YELLOW' | 'GREEN'
+    patientSeverity: 'CRITICAL',
+    triageLevel: 'RED',
     etaSeconds: 90,
     countdownSeconds: 90,
-    hospital: 'AIIMS Trauma Center',
-    destination: 'AIIMS Trauma Center',
-    origin: 'Connaught Place Outer Circle',
+    hospital: 'Trauma Emergency Hub',
+    destination: 'Trauma Emergency Hub',
+    origin: 'Outer Ring Corridor',
     distanceMeters: 850,
     routeCongestionPct: 88.0,
     roadsideMessage: 'Ambulance approaching. Keep left lane clear.',
@@ -129,7 +302,7 @@ export const TrafficProvider = ({ children }) => {
     {
       id: 'ALT-101',
       time: '14:23:13',
-      title: "Blocking call from 'East Commercial Arterial' detected. Traffic shed because it is a priority 100 feature.",
+      title: "Density spike detected on East Arterial. Traffic shed requested.",
       description: 'Density reached 96% with queue spilling beyond 280m. Adaptive green extended by +25s.',
       severity: 'CRITICAL',
       type: 'CONGESTION',
@@ -142,8 +315,8 @@ export const TrafficProvider = ({ children }) => {
     {
       id: 'ALT-102',
       time: '14:21:40',
-      title: "Manually set 'Lane Cut Guard' to active with reason 'erratic swerve pattern detected'.",
-      description: 'Vehicle DL-04-TC-201 performed abrupt 38° lane swerve across 3 lanes at 58 km/h. Marshal alert dispatched.',
+      title: "Lane Cut Guard triggered: erratic swerve pattern detected.",
+      description: 'Vehicle performed abrupt 38° lane swerve across 3 lanes at 58 km/h. Traffic marshal alert dispatched.',
       severity: 'WARNING',
       type: 'RISKY_MOVEMENT',
       author: 'Toby',
@@ -155,8 +328,8 @@ export const TrafficProvider = ({ children }) => {
     {
       id: 'ALT-103',
       time: '14:18:05',
-      title: 'Support tools UI updated due to traffic spike on South Flyover.',
-      description: 'Density on South Flyover approached 75%. Signal timing automatically recalibrated.',
+      title: 'Signal timing automatically recalibrated for city flow.',
+      description: 'Density approached 75%. Signal timing dynamically optimized.',
       severity: 'HEALTHY',
       type: 'SYSTEM',
       author: 'AI Dispatch',
@@ -164,32 +337,6 @@ export const TrafficProvider = ({ children }) => {
       feature: 'Signal Timing Engine',
       service: 'Dynamic Signal Optimizer',
       tags: ['System', 'Optimization']
-    },
-    {
-      id: 'ALT-104',
-      time: '14:15:22',
-      title: 'Emergency Corridor Pre-Clear Triggered on East Approach.',
-      description: 'Ambulance DL-01-AMB-889 dispatched. Roadside display set to 90s countdown.',
-      severity: 'CRITICAL',
-      type: 'EMERGENCY_CORRIDOR',
-      author: 'AI Dispatch',
-      role: 'System',
-      feature: 'Green Corridor Dispatch',
-      service: 'Emergency Triage Engine',
-      tags: ['Emergency', 'Live']
-    },
-    {
-      id: 'ALT-105',
-      time: '14:10:00',
-      title: 'Automatic Adaptive Cycle Recalibrated for Afternoon Peak.',
-      description: 'Cycle length adjusted to 110s across all 4 phases based on live vehicle queue sizes.',
-      severity: 'HEALTHY',
-      type: 'SYSTEM',
-      author: 'System',
-      role: 'System',
-      feature: 'Internal Reports',
-      service: 'Dynamic Signal Optimizer',
-      tags: ['System', 'Feature']
     }
   ]);
 
@@ -203,14 +350,11 @@ export const TrafficProvider = ({ children }) => {
     searchQuery: ''
   });
 
-  // Filter Drawer visibility
-  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-
   // Dynamic AI Suggestions
   const [suggestions, setSuggestions] = useState([
     {
       id: 'SUG-01',
-      title: 'Extend Green Phase on East Arterial',
+      title: 'Extend Green Phase on Main Arterial',
       reason: 'Density at 96% with queue spill over 280m.',
       priority: 'HIGH',
       actionType: 'EXTEND_GREEN',
@@ -219,7 +363,7 @@ export const TrafficProvider = ({ children }) => {
     },
     {
       id: 'SUG-02',
-      title: 'Roadside Driver Notice on Junction 4 West Display',
+      title: 'Roadside Driver Notice on VMS Display',
       reason: 'Prevent lane locking before upcoming ambulance corridor.',
       priority: 'URGENT',
       actionType: 'BROADCAST_ROADSIDE',
@@ -271,7 +415,7 @@ export const TrafficProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, [isLiveSimulating]);
 
-  // Trigger Emergency Corridor with Dynamic Vehicle Support (Ambulance, Fire, Police)
+  // Trigger Emergency Corridor
   const triggerEmergencyCorridor = (severity = 'CRITICAL', vehicleType = 'AMBULANCE') => {
     const countdown = severity === 'CRITICAL' ? 90 : severity === 'SERIOUS' ? 60 : 30;
     const triage = severity === 'CRITICAL' ? 'RED' : severity === 'SERIOUS' ? 'YELLOW' : 'GREEN';
@@ -288,9 +432,9 @@ export const TrafficProvider = ({ children }) => {
       triageLevel: triage,
       etaSeconds: countdown,
       countdownSeconds: countdown,
-      hospital: preset.destination,
-      destination: preset.destination,
-      origin: preset.origin,
+      hospital: `${activeCity?.name || 'Local'} Trauma Center`,
+      destination: `${activeCity?.name || 'Local'} Trauma Center`,
+      origin: `${activeCity?.name || 'Local'} Outer Ring`,
       distanceMeters: preset.distanceMeters,
       routeCongestionPct: 88.0,
       roadsideMessage: `${preset.vehicleLabel} approaching. Keep left lane clear.`,
@@ -303,23 +447,6 @@ export const TrafficProvider = ({ children }) => {
       West: { ...prev.West, currentLight: 'RED' },
       East: { ...prev.East, currentLight: 'GREEN' }
     }));
-
-    setAlerts((prev) => [
-      {
-        id: `ALT-${Date.now().toString().slice(-4)}`,
-        time: new Date().toLocaleTimeString(),
-        title: `Emergency Green Corridor: ${preset.vehicleLabel} (${severity} Priority)`,
-        description: `${preset.vehicleLabel} ${preset.vehicleId} en route to ${preset.destination}. Roadside screens broadcast ${countdown}s hold time. Conflicting approaches held.`,
-        severity: 'CRITICAL',
-        type: 'EMERGENCY_CORRIDOR',
-        author: 'Rob Ocel',
-        role: 'Operator',
-        feature: 'Green Corridor Dispatch',
-        service: 'Emergency Triage Engine',
-        tags: ['Emergency', preset.vehicleLabel, 'Live']
-      },
-      ...prev
-    ]);
   };
 
   const resetEmergencyCorridor = () => {
@@ -348,7 +475,6 @@ export const TrafficProvider = ({ children }) => {
     });
   };
 
-  // Active filter count calculation
   const activeFilterCount =
     (filters.userRole !== 'All users' ? 1 : 0) +
     (filters.featureStatus !== 'All features' ? 1 : 0) +
@@ -360,6 +486,13 @@ export const TrafficProvider = ({ children }) => {
   return (
     <TrafficContext.Provider
       value={{
+        activeCity,
+        cityCenter,
+        handleSelectCity,
+        handleSearchCityQuery,
+        detectUserLocation,
+        userLocationDetected,
+        isDetectingLocation,
         selectedJunction,
         setSelectedJunction: handleSelectJunction,
         environment,
@@ -379,8 +512,12 @@ export const TrafficProvider = ({ children }) => {
         setFilters,
         clearAllFilters,
         activeFilterCount,
-        isFilterDrawerOpen,
-        setIsFilterDrawerOpen
+        showCameras,
+        setShowCameras,
+        showSignals,
+        setShowSignals,
+        showCorridor,
+        setShowCorridor
       }}
     >
       {children}

@@ -20,9 +20,11 @@ export const SignalControlPreview = () => {
         <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-main)' }}>
           Signal Control Preview
         </h3>
-        <Badge variant={emergency.active ? 'critical' : 'healthy'} size="sm">
-          {emergency.active ? 'PRIORITY OVERRIDE' : 'AUTOMATIC ADAPTIVE'}
-        </Badge>
+        {emergency.active && (
+          <Badge variant="critical" size="sm">
+            PRIORITY OVERRIDE
+          </Badge>
+        )}
       </div>
 
       <div

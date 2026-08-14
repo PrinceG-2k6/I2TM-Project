@@ -5,7 +5,7 @@ import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
 
 export const CongestionAlerts = ({ overrideSeverity = null, overrideSearch = null }) => {
-  const { alerts, setAlerts, filters, setFilters, clearAllFilters, activeFilterCount, setIsFilterDrawerOpen } = useTraffic();
+  const { alerts, setAlerts, filters, setFilters, clearAllFilters, activeFilterCount } = useTraffic();
   const [activeActionId, setActiveActionId] = useState(null);
 
   const handleResolveAlert = (alertId) => {
@@ -117,24 +117,6 @@ export const CongestionAlerts = ({ overrideSeverity = null, overrideSearch = nul
               Reset filters
             </button>
           )}
-
-          <button
-            onClick={() => setIsFilterDrawerOpen(true)}
-            style={{
-              fontSize: '13px',
-              fontWeight: '600',
-              color: 'var(--primary-orange)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              cursor: 'pointer',
-              background: 'none',
-              border: 'none'
-            }}
-          >
-            Adjust filters
-            <ChevronRight size={14} />
-          </button>
         </div>
       </div>
 

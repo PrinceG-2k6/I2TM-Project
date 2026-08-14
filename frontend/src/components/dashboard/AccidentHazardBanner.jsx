@@ -1,9 +1,19 @@
 import React from 'react';
-import { AlertOctagon, ShieldAlert, Siren, RotateCcw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { AlertOctagon, ShieldAlert, Siren, RotateCcw, ArrowRight } from 'lucide-react';
 import { useTraffic } from '../../context/TrafficContext';
 
 export const AccidentHazardBanner = ({ onNavigateGuards }) => {
+  const navigate = useNavigate();
   const { emergency, triggerEmergencyCorridor, resetEmergencyCorridor } = useTraffic();
+
+  const handleInspectGuards = () => {
+    if (onNavigateGuards) {
+      onNavigateGuards();
+    } else {
+      navigate('/dashboard/guards');
+    }
+  };
 
   return (
     <div
@@ -91,7 +101,7 @@ export const AccidentHazardBanner = ({ onNavigateGuards }) => {
       {/* Right: Quick Action Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
         <button
-          onClick={onNavigateGuards}
+          onClick={handleInspectGuards}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -111,7 +121,8 @@ export const AccidentHazardBanner = ({ onNavigateGuards }) => {
           onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         >
           <ShieldAlert size={16} color="#DC2626" />
-          <span>Inspect Triage Guard →</span>
+          <span>Inspect Triage Guard</span>
+          <ArrowRight size={14} color="#DC2626" />
         </button>
 
         {emergency.active ? (
@@ -137,7 +148,10 @@ export const AccidentHazardBanner = ({ onNavigateGuards }) => {
           </button>
         ) : (
           <button
-            onClick={() => triggerEmergencyCorridor('CRITICAL')}
+            onClick={() => {
+              triggerEmergencyCorridor('CRITICAL');
+              handleInspectGuards();
+            }}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -161,3 +175,5 @@ export const AccidentHazardBanner = ({ onNavigateGuards }) => {
     </div>
   );
 };
+
+export default AccidentHazardBanner;
