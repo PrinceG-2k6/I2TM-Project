@@ -370,7 +370,22 @@ Node.js Web Backend (Express + WebSockets):
 [LOG-025] Fixed Topbar Overlap Bug & Relocated Green Corridor Simulation to Top of Dashboard
           - Resolved the visual collision bug where Topbar buttons wrapped onto content cards on certain viewports.
           - Converted Topbar to a strict fixed-height single row (`height: 76px`, `whiteSpace: nowrap`, `overflow: hidden`, `zIndex: 50`) preventing any multi-line wrapping or overlap.
-          - Moved the **Green Corridor Simulation & Reset Controls** directly onto the **Dashboard at the top** within `AccidentHazardBanner.jsx`.
+
+[LOG-026] Sidebar-Exclusive Green Corridor Controls & Conditional Home Emergency Activation
+          - Positioned the **`Simulate Green Corridor`** and **`Reset Corridor`** action button exclusively at the **top of the Sidebar** (`Sidebar.jsx`).
+          - Updated `OverviewView.jsx` so that the red emergency alert banner (`AccidentHazardBanner.jsx`) **ONLY renders when the Green Corridor is actively triggered** (`emergency.active === true`).
+          - In normal state, the dashboard displays its clean healthy/adaptive flow without loud warning banners.
+
+[LOG-027] Clear Visual Distinction Between Civilian Violators & Authorized Emergency Vehicles
+          - Eliminated visual confusion regarding vehicle classifications:
+            * **Civilian Violators (e.g. `DL-04-TC-201`)**: Distinctly categorized with `[🚗 Civilian Private Car · Commuter Traffic Violator]` badges with Amber/Slate violation styling.
+            * **Authorized Emergency Responders (`DL-01-AMB-889`, `DL-02-FIRE-101`, `DL-01-POL-999`)**: Clearly categorized under `[🚑 AUTHORIZED EMERGENCY SERVICE · GREEN CORRIDOR GRANTED]` with distinct service badges (Ambulance, Fire Engine, Police Patrol).
+
+[LOG-028] Fixed FYI & Alerts Real-Time Severity and Search Filtering Engine
+          - Wired the **`ALL`**, **`CRITICAL`**, **`WARNING`**, and **`HEALTHY`** severity filter tabs in `FYIsView.jsx` directly to `filters.severity` in `TrafficContext.jsx`.
+          - Connected real-time search input with live query matching across alert titles, vehicle numbers, authors, and alert IDs.
+          - Added dynamic live count badges to each severity tab (e.g. `All Alerts (4)`, `Critical (1)`, `Warning (2)`, `Healthy (1)`).
+          - Updated `CongestionAlerts.jsx` to apply severity filtering instantaneously with instant empty state handling and reset actions.
 
 ====================================================================================================
 KEY USP:
