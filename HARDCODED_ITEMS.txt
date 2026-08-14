@@ -1,0 +1,113 @@
+====================================================================================================
+ADAPTIVE SIGNAL INTELLIGENCE (ASI) - INVENTORY OF HARDCODED / SIMULATED ITEMS
+====================================================================================================
+
+This document lists all hardcoded datasets, simulated engines, mock values, and placeholder configurations
+currently present in the codebase, along with what will replace them when integrated with real data/models.
+
+----------------------------------------------------------------------------------------------------
+1. FRONTEND SIMULATION & MOCK DATA (frontend/src/)
+----------------------------------------------------------------------------------------------------
+
+A. Traffic Approaches & Density Jitter (TrafficContext.jsx):
+   • Hardcoded baseline vehicle counts:
+     - North Ring Approach: ~42 vehicles (capacity 50)
+     - South Flyover Connector: ~21 vehicles (capacity 50)
+     - East Commercial Arterial: ~48 vehicles (capacity 50, critical load)
+     - West Residential Feeder: ~12 vehicles (capacity 50)
+   • Current Behavior: A 1-second `setInterval` randomly jitters vehicle counts by ±1-2 units to simulate dynamic traffic flow.
+   • Production Replacement: Real-time bounding box counts calculated per frame via YOLOv8/OpenCV from junction CCTV/RTSP camera feeds.
+
+B. Emergency Ambulance Trip (TrafficContext.jsx & GreenCorridorPanel.jsx):
+   • Hardcoded Ambulance ID: "DL-01-AMB-889"
+   • Hardcoded Destination: "AIIMS Trauma Center"
+   • Hardcoded Origin: "Connaught Place Outer Circle"
+   • Hardcoded Distance: 850 meters
+   • Current Behavior: 90-second countdown runs via client-side JavaScript interval timer when "Simulate Ambulance" is clicked.
+   • Production Replacement: Live GPS telemetry from 108 Emergency Ambulance fleet management API with real-time Google Maps / OpenStreetMap distance-to-junction polling.
+
+C. FYIs & Operational Alert Feed (TrafficContext.jsx & CongestionAlerts.jsx):
+   • Hardcoded Initial Alerts:
+     - ALT-101: "Blocking call from East Commercial Arterial detected..." (Author: AI Optimizer, Role: System)
+     - ALT-102: "Manually set Cut-Maarna AI to active... 38° lane swerve" (Author: Toby, Role: Vision ML)
+     - ALT-103: "Support tools UI updated due to traffic spike..." (Author: AI Dispatch)
+   • Production Replacement: Dynamic MongoDB/Redis Pub-Sub event stream populated whenever density crosses thresholds or when CV models flag safety violations.
+
+D. Risky Trajectory / Cut-Maarna Telemetry (RiskPatternModule.jsx):
+   • Hardcoded Sample Vehicles:
+     - DL-04-TC-201: 38° swerve angle, 58 km/h speed, Risk Score: 84/100
+     - HR-26-BK-9102: 180° counter-flow wrong-side approach, 28 km/h, Risk Score: 72/100
+   • Production Replacement: Real-time multi-frame vehicle tracker (ByteTrack/DeepSORT) calculating centroid trajectory vectors $(\Delta x, \Delta y)$ across consecutive video frames.
+
+E. Sidebar Operator Profile (Sidebar.jsx):
+   • Hardcoded User: "Rob Ocel", "rob@thisdot.co", Organization: "This Dot"
+   • Note: Preserved to replicate the visual reference design 1:1.
+   • Production Replacement: JWT / OAuth2 smart city operator authentication session.
+
+F. Feature Health Counters (FeaturesHealthBar.jsx):
+   • Hardcoded Status Badges: "11 Healthy", "3 Overloaded", "2 Degraded", "1 Outage", "1 Disabled"
+   • Note: Preserved to match the Stanza reference design specification.
+   • Production Replacement: Real-time Kubernetes / Docker container health checks for microservices.
+
+G. AI Microservice Latency Telemetry (ServicesView.jsx):
+   • Hardcoded Latencies: Vision Detector (24ms), Triage Engine (12ms), Signal Optimizer (8ms), VMS Broadcaster (15ms)
+   • Production Replacement: Live Prometheus / OpenTelemetry latency metrics from running Python FastAPI containers.
+
+H. Junction Selector Presets (FilterDrawer.jsx & SettingsView.jsx):
+   • Hardcoded Junctions: "J-04 Ring Road South", "J-01 Connaught Inner", "J-02 AIIMS Intersection", "J-08 Silk Board Node"
+   • Production Replacement: Geographic junction database fetched dynamically from municipal smart-city GIS endpoints.
+
+I. Interactive Grid Map Geometry & Corridor Waypoints (MapView.jsx):
+   • Hardcoded SVG coordinates for 5 junction nodes along the AIIMS corridor (Connaught Node, Barakhamba, Mandi House, Ring Road, AIIMS Terminal).
+   • Hardcoded simulated road segment congestion levels and ambulance SVG trajectory line interpolation.
+   • Production Replacement: Live Mapbox GL / Google Maps JavaScript API with GeoJSON polyline layers fed by real-time municipal traffic telemetry and GPS fleet trackers.
+
+J. 3D Interactive Digital Twin Scene (Spline3DScene.jsx & HeroSection.jsx):
+   • 3D Hana scene hosted at `https://prod.spline.design/84iJr7VLkazXkLta-bLR/scene.hanacode`.
+   • Production Replacement: Direct integration with smart-city 3D Digital Twin GIS pipeline / Unreal Engine Pixel Streaming node.
+
+----------------------------------------------------------------------------------------------------
+2. WEB BACKEND (backend/web/)
+----------------------------------------------------------------------------------------------------
+
+A. In-Memory Simulated State (server.js):
+   • Hardcoded initial state object (`activeSimulation`) containing junction approaches, alerts, and emergency trip.
+   • Current Behavior: Serves as an active offline fallback so the dashboard works standalone without a live MongoDB connection.
+   • Production Replacement: Full persistence via MongoDB Mongoose models (`Junction.js`, `Alert.js`, `EmergencyTrip.js`).
+
+B. Emergency Dispatch Response (server.js):
+   • If the Python ML microservice is unreachable, `server.js` uses a fallback hardcoded 90s countdown and template message ("Ambulance approaching. Keep left lane clear. Wait 90s.").
+
+----------------------------------------------------------------------------------------------------
+3. PYTHON ML ENGINE (backend/ml/)
+----------------------------------------------------------------------------------------------------
+
+A. Video Feed Ingestion:
+   • The mathematical algorithms (`density_detector.py`, `risk_analyzer.py`, `triage_engine.py`, `signal_optimizer.py`) are fully implemented and accept real coordinate arrays/vehicle counts.
+   • Current Behavior: Processes REST request payloads.
+   • Production Replacement: Direct OpenCV `cv2.VideoCapture("rtsp://...")` streaming pipeline using an Indian traffic video dataset.
+
+B. Constant Threshold Parameters (core/config.py):
+   • `LOW_DENSITY_THRESHOLD`: 30.0%
+   • `MEDIUM_DENSITY_THRESHOLD`: 65.0%
+   • `HIGH_DENSITY_THRESHOLD`: 80.0%
+   • `CRITICAL_DENSITY_THRESHOLD`: 90.0%
+   • `LANE_CUT_ANGLE_DEGREES`: 32.0°
+   • `RISK_SCORE_WARNING`: 60.0, `RISK_SCORE_CRITICAL`: 80.0
+   • `MIN_GREEN_TIME`: 15s, `MAX_GREEN_TIME`: 90s, `DEFAULT_CYCLE_TIME`: 120s
+   • Production Replacement: These can be calibrated per junction geometry and peak-hour traffic rules.
+
+====================================================================================================
+SUMMARY TABLE OF HARDCODED ELEMENTS:
+----------------------------------------------------------------------------------------------------
+Component                | Current State (Simulated)       | Target Production Source
+-------------------------+---------------------------------+----------------------------------------
+Vehicle Counts & Density | Random ±1-2 jitter (TrafficCtx) | YOLOv8 / Video Bounding Boxes
+Ambulance GPS & ETA      | Client-side 90s JS interval     | 108 Ambulance GPS Telemetry / Maps API
+Roadside LED Countdown   | 90s / 60s simulated timer       | VMS Display Protocol (NTCIP / RS485)
+Risky Driving Trajectory | Hardcoded vehicles (DL-04)      | ByteTrack / DeepSORT Trajectory AI
+Operator Profile         | Rob Ocel / rob@thisdot.co       | Operator Auth / JWT Session
+Alert Stream History     | Initial JSON objects            | MongoDB / WebSockets Alert Stream
+Microservice Telemetry   | Static 24ms / 12ms / 8ms        | Prometheus / OpenTelemetry
+Junction List            | 4 Preset Strings                | Municipal GIS Database
+====================================================================================================

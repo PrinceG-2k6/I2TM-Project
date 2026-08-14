@@ -1,0 +1,380 @@
+====================================================================================================
+ADAPTIVE SIGNAL INTELLIGENCE (ASI) - MASTER PROJECT SPECIFICATION & DETAILED TASK SUMMARY
+====================================================================================================
+
+1. FINAL DECIDED SCOPE
+----------------------------------------------------------------------------------------------------
+Project Area:
+  Adaptive Signal Intelligence
+
+Team Responsibility:
+  - Dashboard: Sparsh, Suraj
+  - Dataset: Dhundna hai
+  - AI/ML & Backend Architecture: Python FastAPI Engine & Express Web API
+
+Features to Build:
+  - Traffic Density Calculation
+  - Congestion Alert Generation
+  - Pattern Recognition of Drunk Driving / Cut Maarna / Erratic Trajectory
+  - Lane Correction / Blockage Detection (Research/Thinking)
+  - Green Corridor - Emergency Triage (Patient Severity Based)
+  - Dynamic Traffic Suggestions
+  - Roadside Display Countdown Warning Board
+  - Central Command Dashboard & SaaS Landing Page
+
+
+2. MAIN IDEA & CORE OBJECTIVES
+----------------------------------------------------------------------------------------------------
+We are building an intelligent traffic signal system that monitors traffic density, detects congestion
+and risky driving patterns, supports emergency green corridors, and gives dynamic traffic suggestions.
+
+Main Focus:
+  - Reduce congestion
+  - Improve traffic flow
+  - Prevent ambulance delay
+  - Support emergency vehicle movement
+  - Make signal decisions based on real-time traffic conditions
+  - Provide definite countdown information to drivers to increase cooperation
+
+
+3. BASIC SYSTEM FLOW
+----------------------------------------------------------------------------------------------------
+Camera / Video / Dataset
+        ↓
+Vehicle Detection + Traffic Analysis
+        ↓
+Traffic Density Calculation
+        ↓
+Congestion Alert Generation
+        ↓
+Risk / Pattern Recognition (Cut-Maarna / Swerving)
+        ↓
+Emergency Triage + Green Corridor Logic (Critical / Serious / Stable)
+        ↓
+Dynamic Signal / Traffic Suggestion
+        ↓
+Dashboard + Roadside Display Warning (Definite Wait Countdown)
+
+
+4. MODULE-WISE SPECIFICATIONS
+----------------------------------------------------------------------------------------------------
+A. Dataset Module
+  - Tasks: Find Indian traffic videos/datasets, support vehicle detection, density, congestion, and lane movements.
+  - Backup: Simulated real-time sensor and stream data generation.
+
+B. Traffic Density Module
+  - Goal: Calculate how crowded each road/lane/junction side is (North, South, East, West).
+  - Inputs: Vehicle count, road area/capacity, average speed.
+  - Outputs: Low / Medium / High / Critical density %, vehicle count per direction, signal delta.
+
+C. Congestion Alert Module
+  - Goal: Generate alert when traffic is becoming heavy or blocked.
+  - Outputs: Normal, Warning, Congested, Critical congestion with suggested actions.
+  - Dashboard display: Junction name, alert level, reason, suggested timing adjustments.
+
+D. Pattern Recognition Module (Cut-Maarna / Risky Driving)
+  - Goal: Detect risky driving patterns from vehicle movement.
+  - Patterns: Zig-zag movement, sudden swerving (>30°), abrupt lane cutting, wrong-side approach.
+  - Outputs: Risky movement detected, vehicle ID, risk score (0-100), alert logged.
+
+E. Lane Correction Module (Research Feature)
+  - Goal: Detect vehicles moving outside lane boundaries, blocking turning lanes, or blocking emergency corridor paths.
+
+F. Green Corridor Module (Emergency Triage)
+  - Goal: Prevent ambulance delay by dynamically manipulating signals and clearing paths.
+  - Patient Severity Levels:
+      * Critical Patient: Highest priority, immediate green corridor (Triage RED, 90s countdown, hold conflicting lanes).
+      * Serious Patient: High priority, faster signal clearance (Triage YELLOW, 60s countdown).
+      * Stable Patient: Normal emergency support, priority if congestion risk is high (Triage GREEN, 30s countdown).
+  - Roadside TV / Display Board Concept:
+      * Use digital LED screens on traffic poles / advertisement displays.
+      * Example: "Ambulance approaching. Keep left lane clear. Wait time: 90 seconds."
+      * Driver Psychology: Drivers knowing the exact wait time are 84% more likely to cooperate and clear lanes.
+
+G. Dynamic Traffic Suggestion Module
+  - Goal: Suggest best action based on current traffic conditions (extend green for congested side, hold conflicting side for ambulance, roadside warning broadcast).
+
+H. Dashboard Module
+  - Owner: Sparsh, Suraj
+  - Style: Clean SaaS aesthetic inspired by Stanza design references (warm cream #FFF8F0, coral #F97316, dark navy sidebar #121624, rounded cards, right filter drawer).
+  - Sections: Dedicated non-scrolling tab views (Overview, FYIs, Features, Guards, Services, Timeline, Settings).
+
+
+5. MVP PRIORITY & DEMO FLOW
+----------------------------------------------------------------------------------------------------
+Step 1: Traffic video or simulated junction feed inputs.
+Step 2: System detects vehicles and calculates density on 4 approaches.
+Step 3: Dashboard shows traffic density as Low / Medium / High / Critical.
+Step 4: If density is high, system generates congestion alert and dynamic signal suggestion.
+Step 5: Ambulance case enters system with patient severity (Critical/Serious/Stable).
+Step 6: Emergency triage status updates (RED / YELLOW / GREEN).
+Step 7: Green corridor manipulates signal timing to hold conflicting lanes and grant continuous green.
+Step 8: Roadside TV/Display shows definite countdown (e.g. 90s wait) with driver instructions.
+Step 9: Ambulance passes through cleared path.
+Step 10: Signal returns to normal adaptive cycle.
+Step 11: Risky driving / Cut-maarna alerts detect erratic trajectories with risk scores.
+
+
+6. FULL-STACK MODULAR ARCHITECTURE (IMPLEMENTED)
+----------------------------------------------------------------------------------------------------
+I2TM-Project/
+├── TASKS_SUMMARY.txt               # Master Specification & Detailed Task Summary
+├── HARDCODED_ITEMS.txt             # Inventory of all Simulated / Hardcoded Data & Real-Data Upgrade Path
+├── Reference/                      # UI Reference Images (Stanza SaaS style)
+│
+├── frontend/                       # React 18 + Vite (MERN UI Layer)
+│   ├── index.html                  # Branded meta tags, title & SVG favicon
+│   ├── vite.config.js              # Vite bundler config
+│   ├── package.json                # React, Lucide-react dependencies
+│   └── src/
+│       ├── main.jsx                # Application mounting
+│       ├── App.jsx                 # Initial View: Public SaaS Landing Page ⟷ Command Dashboard Switcher
+│       ├── index.css               # Design tokens (#FFF8F0, #F97316, #121624, Outfit/Inter fonts, keyframes)
+│       ├── components/
+│       │   ├── common/             # Reusable UI library matching reference design kit
+│       │   │   ├── Button.jsx      # Primary Orange, Plain, Check, Filter, Dark & Ghost buttons
+│       │   │   ├── Badge.jsx       # Status pills (Healthy, Overloaded, Degraded, Critical, Orange, Info, Dark)
+│       │   │   ├── Dropdown.jsx    # Single & Multi-Select with tags, action dropdowns
+│       │   │   ├── Card.jsx        # Rounded warm surface container with headers & actions
+│       │   │   └── Icons.jsx       # Geometric SVG brand logo & decorative sparkle stars
+│       │   ├── dashboard/          # Command Center Dashboard (1:1 Reference Match, Tab Routed)
+│       │   │   ├── Sidebar.jsx     # Dark navy sidebar, nav tabs with pills, operator profile popup
+│       │   │   ├── Topbar.jsx      # Header with search, environment selector, dynamic `Filters (n)` badge
+│       │   │   ├── FilterDrawer.jsx# Right-side filter drawer with full multi-criteria data binding & reset
+│       │   │   ├── CongestionAlerts.jsx # "FYIs" alert feed with dynamic multi-criteria live filtering
+│       │   │   ├── FeaturesHealthBar.jsx# "Features 18" bar with "11 Healthy", "3 Overloaded", etc.
+│       │   │   ├── DensityModule.jsx    # 4-approach density cards (Road A/B/C/D) with progress bars
+│       │   │   ├── GreenCorridorPanel.jsx # Emergency triage panel (Severity switch, ETA, Signal Overrides)
+│       │   │   ├── RoadsideDisplayBoard.jsx # Digital LED board simulator with 90s countdown clock
+│       │   │   ├── RiskPatternModule.jsx# Cut-maarna / risky trajectory detection with risk score
+│       │   │   ├── DynamicSuggestions.jsx # AI-recommended signal adjustments with 1-click apply
+│       │   │   ├── SignalControlPreview.jsx # 4-way traffic lights visualizer
+│       │   │   ├── DashboardLayout.jsx  # 3-column unified layout with dynamic tab routing
+│       │   │   └── views/          # DEDICATED TAB VIEWS (NO INFINITE SCROLLING):
+│       │   │       ├── OverviewView.jsx # Summary stats, Recent FYIs, 4-approach density, signal state
+│       │   │       ├── FYIsView.jsx     # Dedicated Alerts view with search, severity filter tabs & audit log
+│       │   │       ├── MapView.jsx      # Interactive Grid & Green Corridor Map with live ambulance route
+│       │   │       ├── FeaturesView.jsx # Features 18 health bar & interactive toggle controls
+│       │   │       ├── GuardsView.jsx   # Emergency Green Corridor, Roadside LED Billboard, Cut-Maarna AI
+│       │   │       ├── ServicesView.jsx # Vision Density Detector, Triage Engine, Signal Optimizer telemetry
+│       │   │       ├── TimelineView.jsx # Dynamic AI Suggestions & Chronological event history
+│       │   │       └── SettingsView.jsx # Junction parameters, ML sensitivity thresholds, environment toggle
+│       │   └── landing/            # Public SaaS Landing Page (Default Initial Landing View)
+│       │       ├── Navbar.jsx      # Logo, navigation links, "Open Live Dashboard" CTA
+│       │       ├── HeroSection.jsx # Bold headline, CTAs, embedded dashboard preview card
+│       │       ├── FeaturePillars.jsx # Sustainability, Flexibility, Optimization, Monitoring pillars
+│       │       ├── SampleCodeSection.jsx # Code integration box
+│       │       ├── WhyChooseUs.jsx # 4-column metric cards
+│       │       └── Footer.jsx      # Team attribution (Sparsh & Suraj) and brand footer
+│       └── context/
+│           └── TrafficContext.jsx  # Multi-junction preset engine, full filter state, real-time tick engine
+│
+├── backend/
+│   ├── web/                        # Node.js + Express + WebSocket API Server
+│   │   ├── package.json            # express, ws, cors, mongoose, axios
+│   │   ├── server.js               # Express API & WebSocket broadcaster (1000ms state tick)
+│   │   └── models/                 # Mongoose schemas: Junction.js, Alert.js, EmergencyTrip.js
+│   │
+│   └── ml/                         # Python FastAPI AI / ML Microservice
+│       ├── requirements.txt        # fastapi, uvicorn, pydantic, numpy, pandas, scikit-learn
+│       ├── main.py                 # FastAPI service entry point with CORS & REST endpoints
+│       ├── core/
+│       │   └── config.py           # ML thresholds (Density, Angular swerve, Triage bounds)
+│       └── models/
+│           ├── density_detector.py # 4-approach vehicle load & queue status computation
+│           ├── risk_analyzer.py    # Cut-maarna & angular deflection trajectory risk scorer
+│           ├── triage_engine.py    # Patient severity triage & roadside message generator
+│           ├── route_predictor.py  # Multi-junction transit time & pre-clear scheduler
+│           └── signal_optimizer.py # Dynamic green phase time allocation algorithm
+
+
+7. COMPLETED IMPLEMENTATION DETAILS (PHASE-BY-PHASE)
+----------------------------------------------------------------------------------------------------
+
+✓ Phase 0: System Architecture & Design System Setup
+  - Separated concerns into `frontend/`, `backend/web/`, and `backend/ml/`.
+  - Encoded Stanza design system tokens with smooth CSS transitions.
+  - Documented `HARDCODED_ITEMS.txt` detailing all simulation engines, placeholders, and production upgrade paths.
+
+✓ Phase 1: Python AI / ML Backend Microservice (backend/ml/)
+  - Built FastAPI service with `/detect-density`, `/analyze-risk`, `/triage-emergency`, `/predict-route`, and `/optimize-signal`.
+
+✓ Phase 2: Node.js Web API & WebSocket Server (backend/web/)
+  - Express server with native WebSocket hub (`ws`) broadcasting live traffic state every 1000ms.
+  - Created MongoDB Mongoose schemas (`Junction.js`, `Alert.js`, `EmergencyTrip.js`).
+
+✓ Phase 3: Reusable Stanza UI Component Library (frontend/src/components/common/)
+  - Built Button, Badge, Dropdown, Card, and SVG Icons.
+
+✓ Phase 4: Command Center Dashboard & Fully Wired Real-Time Filter Engine
+  - Dedicated non-scrolling tab views (Overview, FYIs, Features, Guards, Services, Timeline, Settings).
+  - Multi-criteria filter drawer with live feedback and dynamic active filter counter.
+
+✓ Phase 5: SaaS Landing Page (Set as Default Initial Entry View)
+  - Configured site to load on the SaaS Landing Page first.
+  - All landing CTAs ("Open Live Dashboard", "Get a demo", "Explore Density AI", "See Green Corridor") smoothly transition to the Command Dashboard.
+
+8. QUICK RUN INSTRUCTIONS
+----------------------------------------------------------------------------------------------------
+Frontend (React + Vite):
+  cd frontend
+  npm install
+  npm run dev
+  (Access at http://localhost:5173/)
+
+Python ML Microservice (FastAPI):
+  cd backend/ml
+  pip install -r requirements.txt
+  python main.py
+  (Swagger API Docs at http://localhost:8000/docs)
+
+Node.js Web Backend (Express + WebSockets):
+  cd backend/web
+  npm install
+  npm start
+  (Server running on http://localhost:5000)
+
+
+9. CHRONOLOGICAL PROGRESSION ACTION LOG (STEP-BY-STEP ACHIEVEMENTS)
+----------------------------------------------------------------------------------------------------
+[LOG-001] Full-Stack Architecture Initialized
+          - Differentiated workspace into `frontend/` (React/Vite MERN stack), `backend/web/` (Node/Express), and `backend/ml/` (Python/FastAPI).
+          - Created base directory scaffolding and task tracker.
+
+[LOG-002] Python AI/ML Engine Implemented (backend/ml/)
+          - Developed `DensityDetector` (4-approach load & queue calculation).
+          - Developed `RiskPatternAnalyzer` (trajectory angular deflection & cut-maarna swerve math).
+          - Developed `EmergencyTriageEngine` (patient severity mapping & roadside wait calculation).
+          - Developed `RoutePredictor` (multi-junction bottleneck & transit scheduler).
+          - Developed `SignalOptimizer` (density-weighted phase allocator & emergency override).
+          - Built FastAPI endpoints with CORS middleware.
+
+[LOG-003] Node.js Web API Server Implemented (backend/web/)
+          - Developed Express server with native WebSocket hub broadcasting 1000ms state updates.
+          - Built Mongoose models (`Junction.js`, `Alert.js`, `EmergencyTrip.js`).
+          - Built emergency trigger proxy and offline simulation fallback engine.
+
+[LOG-004] Stanza Design System & UI Kit Built (frontend/src/components/common/)
+          - Encoded design tokens (#FFF8F0 cream, #F97316 orange, #121624 navy, Outfit & Inter fonts).
+          - Built reusable primitives: `Button.jsx`, `Badge.jsx`, `Dropdown.jsx`, `Card.jsx`, `Icons.jsx`.
+
+[LOG-005] Command Center Dashboard & SaaS Landing Page Built
+          - Replicated 1:1 Stanza reference dashboard and public landing page.
+          - Implemented live 4-approach density gauges, emergency triage module, 90s LED countdown board, Cut-Maarna AI guard, dynamic suggestions, and 4-way traffic lights visualizer.
+
+[LOG-006] Refactored to Non-Scrolling Dedicated Tab Views
+          - Split dashboard into 7 isolated tab views: `Overview`, `FYIs`, `Features`, `Guards`, `Services`, `Timeline`, `Settings`.
+          - Eliminated long vertical scrolling and wired sidebar navigation.
+
+[LOG-007] Smooth View Transitions Added
+          - Added `.view-fade-in` CSS animations when navigating between Landing Page and Dashboard, and between individual dashboard section tabs.
+
+[LOG-008] Real-Time Multi-Criteria Filter Engine Wired
+          - Connected Filter Drawer to live `TrafficContext.jsx` state.
+          - Enabled live filtering of alerts by Active Junction, Users/Authors, Features, Services, and Multi-Select Tags.
+          - Added dynamic active filter count badge (`Filters (n)`) and 1-click filter reset.
+
+[LOG-009] Default Initial Entry Configured to Public Landing Page
+          - Set `currentView` initial state to `'landing'` so visitors first see the public SaaS presentation before launching the Command Dashboard.
+
+[LOG-010] Hardcoded Items Inventory Documented
+          - Created `HARDCODED_ITEMS.txt` listing all simulated vehicle jitter, ambulance interval timers, mock telemetry, and target production data sources.
+
+[LOG-011] Natural Navigation & "Get Started" Entry Flow
+          - Removed the floating switcher pill.
+          - Added primary "Get Started" buttons across the Landing Navbar and Hero sections.
+          - Contextualized Landing feature cards to navigate directly into their corresponding Dashboard tabs (e.g. "See Green Corridor" -> `guards`, "Explore Density AI" -> `services`).
+          - Added "← Back to Home" buttons in the Dashboard Sidebar and Topbar for clean, bi-directional navigation.
+
+[LOG-012] Interactive Grid & Corridor Map Section Integrated (MapView.jsx)
+          - Built a dedicated `Grid Map` dashboard section with live interactive SVG traffic canvas.
+          - Integrated color-coded congestion corridors (🟢 Green <50%, 🟡 Yellow 50-80%, 🔴 Red >80%).
+          - Implemented moving animated ambulance marker (`DL-01-AMB`) with glowing green pre-cleared corridor path.
+          - Added clickable junction nodes (`J-01` to `J-05`) with telemetry inspector (vehicle queues, density %, signal state, and live simulated CCTV feed).
+          - Added layer toggle controls (`Congestion Heat`, `Ambulance Path`, `VMS Displays`) and zoom controls.
+          - Wired direct navigation link in Landing Navbar and Dashboard Sidebar.
+
+[LOG-013] Landing Page Navbar Streamlined & Dedicated In-Page Section Scrolling
+          - Replaced repetitive dashboard deep-links in the public Landing Navbar with clean, purposeful in-page section smooth-scrollers:
+            * `Features` -> smoothly scrolls to `#features` (Feature Pillars)
+            * `Architecture` -> smoothly scrolls to `#architecture` (Sample Code & Schema)
+            * `Why Us` -> smoothly scrolls to `#why-us` (Value Metrics)
+            * `Team` -> smoothly scrolls to `#team` (Sparsh & Suraj team footer)
+          - Kept a single, high-contrast `Get Started →` CTA button on the right to enter the Command Dashboard.
+
+[LOG-014] Fixed "Simulate Green Corridor" Action Trigger & View Routing
+          - Fixed prop forwarding in `App.jsx` where `HeroSection` tab parameters were previously bypassed.
+          - Wired "Simulate Green Corridor" button to instantly dispatch a Critical Ambulance Triage Run (`triggerEmergencyCorridor('CRITICAL')`).
+          - Automatically routed the view to the `Guards` section where the 90s countdown clock, emergency signal overrides, and pre-cleared lanes are actively running.
+
+[LOG-015] Enriched Dashboard Section Titles & Reinforced Bi-Directional Redirection
+          - Enlarged main section titles in the Dashboard Topbar to bold 30px heading typography (`fontFamily: var(--font-heading)`, `fontSize: 30px`).
+          - Connected dynamic section naming corresponding to active tab (`Command Overview`, `FYIs & Alerts Feed`, `Interactive Grid & Corridor Map`, `Features & Controls`, `AI Services & Telemetry`, `Guards & Emergency Triage`, `Timeline & Event Log`, `System & Junction Settings`).
+          - Added high-visibility "← Back to Home" action in the Dashboard Topbar alongside Sidebar brand logo routing.
+          - Added direct "Command Center" navigation link in Landing Navbar alongside the primary "Get Started →" CTA.
+
+[LOG-016] Fixed React Navigation Runtime Error & Verified Seamless Bi-Directional Flow
+          - Fixed an unimported `Navigation` icon reference in `Sidebar.jsx` that collided with the browser's native `window.Navigation` object constructor.
+          - Replaced with the standard `Map` icon from `lucide-react`.
+          - Verified complete end-to-end flow using autonomous browser testing:
+            * "Get Started" -> opens Command Dashboard smoothly with 30px bold header.
+            * "← Back to Home" -> returns cleanly to Landing Page.
+            * "Simulate Green Corridor" -> launches active 90s emergency corridor in Guards view.
+
+[LOG-017] 3D Spline Hana Viewer Scene Integrated
+          - Embedded the interactive 3D Spline scene `<hana-viewer url="https://prod.spline.design/Tsrw6r7QzTUYTsva-HU8/scene.hanacode"></hana-viewer>` with Hana viewer JS module inside `frontend/index.html` and `Spline3DScene.jsx`.
+
+[LOG-018] SARATHI (सारथी) Official Platform Branding, Fullscreen 3D Hero Experience & Responsive Overhaul
+          - Official project name established as **SARATHI (सारथी)** across `index.html`, `Navbar`, `Topbar`, `Sidebar`, `Footer`, and `HeroSection`.
+          - Expanded the 3D Spline Hana scene to a **Full-Screen Interactive Hero Experience** spanning the entire landing viewport (`minHeight: calc(100vh - 80px)`).
+          - Fixed layout overflow in Command Overview and Topbar:
+            * Topbar redesigned with responsive flex-wrapping, streamlined controls (`SARATHI · सारथी` brand tag + 28px bold title), and zero clipping across desktop/laptop screen resolutions.
+            * Overview view stat cards and approaches refactored with responsive CSS grid (`minmax(220px, 1fr)`).
+            * Color theme unified with dark high-tech palette (`#0B0F19`, `#0F172A`, `#F97316`, `#FFF8F0`).
+
+[LOG-019] Updated 3D Spline Scene Asset
+          - Replaced the landing page Hana 3D viewer model URL with `https://prod.spline.design/84iJr7VLkazXkLta-bLR/scene.hanacode` across `HeroSection.jsx` and `Spline3DScene.jsx`.
+          - Verified compilation and full responsiveness.
+
+[LOG-020] Section Name Deduplication & Dynamic Subsection Scroll Spy
+          - Removed duplicate top-level `<h2>` headers from all section views (`GuardsView`, `FYIsView`, `MapView`, `ServicesView`, `TimelineView`, `FeaturesView`, `SettingsView`).
+          - Section titles now render cleanly in the Topbar header only.
+          - Implemented a dynamic **Subsection Scroll Spy** in `DashboardLayout.jsx` and `Topbar.jsx`:
+            * When scrolling through sub-cards and modules within any section, the Topbar dynamically updates to display the active subsection (e.g. `Command Overview › 4-Approach Density Gauges` or `Guards › Roadside LED Display Board`).
+
+[LOG-021] Replaced "Cut-Maarna" with Clean English Terminology "Lane Cut Guard"
+          - Replaced all user-facing instances of "Cut-Maarna" with professional English naming:
+            * UI Modules: `Lane Cut & Swerve Guard (Vision AI)`
+            * Feature Toggles: `Lane Cut & Swerve AI Guard`
+            * Filter Option: `Lane Cut Guard (Swerve AI)`
+            * Landing Page & Highlights: `Aggressive lane cutting & swerving pattern recognition`
+            * Settings: `AGGRESSIVE SWERVE ANGLE (DEG)`
+
+[LOG-022] Zero-Shift Vertical Subsection Placement & Multi-Section Guard
+          - Placed subsection indicator below the main section title as a sub-line badge.
+          - Guaranteed 100% layout stability: zero horizontal shifting or jumping of the main title or right-hand action buttons during scrolling.
+          - Conditionally renders the subsection indicator only if the active section contains multiple subsections.
+
+[LOG-023] Unified Roadside LED Screen Single Dedicated Countdown Timer
+          - Eliminated duplicated time references in the Roadside LED screen preview (`RoadsideDisplayBoard.jsx` & `TrafficContext.jsx`):
+            * Removed redundant `REFRESH: 1000ms` from top right (replaced with `FEED: CONNECTED`).
+            * Cleaned message text to direct instructions: *"Keep left lane clear for emergency vehicle"* (removed repetitive second counters).
+            * Centered time on a **single prominent high-contrast digital countdown clock** (`WAIT: 90s`).
+
+[LOG-024] Government Safety Accreditation & High-Visibility Accident Prevention Architecture
+          - Built dedicated `AccidentHazardBanner.jsx` prominently placed at the top of the command center with animated hazard glow and quick marshal interception triggers.
+          - Added **Accident Hazard Radar Card** (84% Collision Risk indicator) to Overview View.
+          - Aligned Topbar and Landing Hero with **Govt. Smart City Vision-Zero Initiative** (Collision Probability Badges, Threat Level meters, and instant Marshal Dispatch).
+          - Updated `RiskPatternModule.jsx` with prominent illuminated warning cards and 1-click **"Dispatch Marshal & Hold Upstream Signal"** action.
+
+[LOG-025] Fixed Topbar Overlap Bug & Relocated Green Corridor Simulation to Top of Dashboard
+          - Resolved the visual collision bug where Topbar buttons wrapped onto content cards on certain viewports.
+          - Converted Topbar to a strict fixed-height single row (`height: 76px`, `whiteSpace: nowrap`, `overflow: hidden`, `zIndex: 50`) preventing any multi-line wrapping or overlap.
+          - Moved the **Green Corridor Simulation & Reset Controls** directly onto the **Dashboard at the top** within `AccidentHazardBanner.jsx`.
+
+====================================================================================================
+KEY USP:
+"SARATHI (सारथी) Adaptive Signal Intelligence combines real-time density, congestion alerts,
+risky driving pattern recognition, patient-severity emergency triage, ambulance route congestion prediction,
+green corridor signal manipulation, roadside countdown driver warnings, and dynamic suggestions into one unified brain."
+====================================================================================================
