@@ -1,0 +1,34 @@
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+
+    container_name: asi-backend
+
+    ports:
+      - "8000:8000"
+
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/adaptive_signal_intelligence
+
+    depends_on:
+      - mongodb
+
+    volumes:
+      - ./backend/app:/app/app
+
+  mongodb:
+    image: mongo:8
+
+    container_name: asi-mongodb
+
+    ports:
+      - "27017:27017"
+
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:

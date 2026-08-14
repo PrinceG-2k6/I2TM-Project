@@ -1,0 +1,46 @@
+# Python virtual environments
+backend/.venv/
+backend/venv/
+**/.venv/
+**/venv/
+
+# Python cache
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Pytest
+.pytest_cache/
+**/.pytest_cache/
+
+# Environment files
+.env
+**/.env
+
+# Git
+.git/
+.gitignore
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Node/frontend dependencies (future)
+node_modules/
+**/node_modules/
+
+# Build/output directories
+dist/
+build/
+
+# Coverage
+.coverage
+htmlcov/

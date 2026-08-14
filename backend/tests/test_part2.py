@@ -1,10 +1,19 @@
 from copy import deepcopy
+from random import Random
 
 import pytest
 from bson import ObjectId
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.simulation.traffic_simulator import (
+    TrafficScenario,
+    create_simulated_traffic_observation,
+    generate_scenario_data,
+    generate_traffic_observation,
+    generate_traffic_observations,
+    generate_vehicle_distribution,
+)
 from app.services import junction_service, traffic_service
 
 
@@ -254,3 +263,141 @@ def test_negative_traffic_values(client: TestClient) -> None:
     response = client.post("/api/v1/traffic", json=payload)
 
     assert response.status_code == 422
+
+
+def assert_valid_simulated_observation(observation: dict) -> None:
+    assert observation["vehicle_count"] >= 0
+    assert observation["cars"] >= 0
+    assert observation["motorcycles"] >= 0
+    assert observation["buses"] >= 0
+    assert observation["trucks"] >= 0
+    assert observation["average_speed"] >= 0
+    assert observation["queue_length"] >= 0
+    assert observation["junction_id"]
+    assert observation["timestamp"]
+    assert (
+        observation["cars"]
+        + observation["motorcycles"]
+        + observation["buses"]
+        + observation["trucks"]
+        == observation["vehicle_count"]
+    )
+
+
+@pytest.mark.parametrize(
+    ("scenario", "vehicle_range", "speed_range", "queue_range"),
+    [
+        (TrafficScenario.NORMAL, (40, 90), (35, 50), (10, 50)),
+        (TrafficScenario.BUSY, (90, 160), (20, 35), (50, 150)),
+        (TrafficScenario.CRITICAL, (160, 250), (5, 20), (150, 300)),
+    ],
+)
+def test_simulator_generates_scenario_data(
+    scenario: TrafficScenario,
+    vehicle_range: tuple[int, int],
+    speed_range: tuple[int, int],
+    queue_range: tuple[int, int],
+) -> None:
+    data = generate_scenario_data(scenario, Random(7))
+
+    assert vehicle_range[0] <= data["vehicle_count"] <= vehicle_range[1]
+    assert speed_range[0] <= data["average_speed"] <= speed_range[1]
+    assert queue_range[0] <= data["queue_length"] <= queue_range[1]
+
+
+def test_simulator_vehicle_distribution_total() -> None:
+    vehicle_count = 123
+    distribution = generate_vehicle_distribution(vehicle_count, Random(11))
+
+    assert sum(distribution.values()) == vehicle_count
+
+
+def test_simulator_non_negative_values() -> None:
+    observation = generate_traffic_observation(
+        str(ObjectId()),
+        TrafficScenario.CRITICAL,
+        Random(13),
+    )
+
+    assert_valid_simulated_observation(observation)
+
+
+def test_simulator_generates_different_observations() -> None:
+    junction_id = str(ObjectId())
+    first = generate_traffic_observation(junction_id, TrafficScenario.BUSY, Random(17))
+    second = generate_traffic_observation(junction_id, TrafficScenario.BUSY, Random(19))
+
+    first_values = (
+        first["vehicle_count"],
+        first["cars"],
+        first["motorcycles"],
+        first["buses"],
+        first["trucks"],
+        first["average_speed"],
+        first["queue_length"],
+    )
+    second_values = (
+        second["vehicle_count"],
+        second["cars"],
+        second["motorcycles"],
+        second["buses"],
+        second["trucks"],
+        second["average_speed"],
+        second["queue_length"],
+    )
+
+    assert first_values != second_values
+
+
+def test_simulator_preserves_junction_id() -> None:
+    junction_id = str(ObjectId())
+    observation = generate_traffic_observation(
+        junction_id,
+        TrafficScenario.NORMAL,
+        Random(23),
+    )
+
+    assert observation["junction_id"] == junction_id
+
+
+def test_simulator_generates_timestamp() -> None:
+    observation = generate_traffic_observation(
+        str(ObjectId()),
+        TrafficScenario.NORMAL,
+        Random(29),
+    )
+
+    assert observation["timestamp"]
+
+
+def test_simulator_generates_multiple_observations_for_junction() -> None:
+    junction_id = str(ObjectId())
+    observations = generate_traffic_observations(
+        junction_id,
+        [TrafficScenario.NORMAL, TrafficScenario.BUSY, TrafficScenario.CRITICAL],
+        Random(37),
+    )
+
+    assert len(observations) == 3
+    for observation in observations:
+        assert observation["junction_id"] == junction_id
+        assert_valid_simulated_observation(observation)
+
+
+def test_simulator_uses_existing_traffic_service_storage(
+    client: TestClient,
+) -> None:
+    junction = create_junction(client)
+
+    created_observation = create_simulated_traffic_observation(
+        junction["id"],
+        TrafficScenario.NORMAL,
+        Random(31),
+    )
+    response = client.get(f"/api/v1/traffic/current/{junction['id']}")
+
+    assert created_observation["id"]
+    assert created_observation["junction_id"] == junction["id"]
+    assert created_observation["timestamp"]
+    assert response.status_code == 200
+    assert response.json()["id"] == created_observation["id"]
