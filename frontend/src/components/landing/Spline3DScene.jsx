@@ -43,7 +43,7 @@ export const Spline3DScene = () => {
       >
         <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#22C55E' }} className="animate-pulse-slow" />
         <span style={{ fontSize: '11px', fontWeight: '700', color: '#F8FAFC', letterSpacing: '0.05em' }}>
-          MARGDARSHI 3D DIGITAL TWIN · INTERACTIVE
+          SARATHI 3D DIGITAL TWIN · INTERACTIVE
         </span>
       </div>
     </div>

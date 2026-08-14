@@ -1,5 +1,5 @@
 """
-Risky Driving Pattern & Cut-Maarna Recognition Module
+Risky Driving Pattern & Aggressive Lane Cut Recognition Module
 Analyzes trajectory coordinates, swerving behavior, and lane violations.
 """
 from typing import List, Dict, Any
@@ -10,7 +10,7 @@ class RiskPatternAnalyzer:
     @staticmethod
     def analyze_trajectory(vehicle_id: str, trajectory_points: List[Dict[str, float]], speed_kmh: float = 45.0) -> Dict[str, Any]:
         """
-        Analyzes trajectory points [{x, y, timestamp}] for sudden swerving, zig-zag, or cut-maarna patterns.
+        Analyzes trajectory points [{x, y, timestamp}] for sudden swerving, zig-zag, or aggressive lane cutting.
         """
         if len(trajectory_points) < 3:
             return {

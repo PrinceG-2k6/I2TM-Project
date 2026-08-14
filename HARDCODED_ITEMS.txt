@@ -29,11 +29,11 @@ B. Emergency Ambulance Trip (TrafficContext.jsx & GreenCorridorPanel.jsx):
 C. FYIs & Operational Alert Feed (TrafficContext.jsx & CongestionAlerts.jsx):
    • Hardcoded Initial Alerts:
      - ALT-101: "Blocking call from East Commercial Arterial detected..." (Author: AI Optimizer, Role: System)
-     - ALT-102: "Manually set Cut-Maarna AI to active... 38° lane swerve" (Author: Toby, Role: Vision ML)
+     - ALT-102: "Manually set Lane Cut Guard to active... 38° lane swerve" (Author: Toby, Role: Vision ML)
      - ALT-103: "Support tools UI updated due to traffic spike..." (Author: AI Dispatch)
    • Production Replacement: Dynamic MongoDB/Redis Pub-Sub event stream populated whenever density crosses thresholds or when CV models flag safety violations.
 
-D. Risky Trajectory / Cut-Maarna Telemetry (RiskPatternModule.jsx):
+D. Risky Trajectory / Lane Cut & Swerve Telemetry (RiskPatternModule.jsx):
    • Hardcoded Sample Vehicles:
      - DL-04-TC-201: 38° swerve angle, 58 km/h speed, Risk Score: 84/100
      - HR-26-BK-9102: 180° counter-flow wrong-side approach, 28 km/h, Risk Score: 72/100

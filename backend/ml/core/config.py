@@ -11,7 +11,7 @@ class MLConfig:
     HIGH_DENSITY_THRESHOLD = 80.0
     CRITICAL_DENSITY_THRESHOLD = 90.0
 
-    # Risky Driving / Cut-Maarna Parameters
+    # Risky Driving / Aggressive Lane Cut Parameters
     LATERAL_ACCELERATION_THRESHOLD = 2.8 # m/s^2 lateral variance
     LANE_CUT_ANGLE_DEGREES = 32.0 # Sudden swerve angle
     RISK_SCORE_WARNING = 60.0

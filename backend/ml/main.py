@@ -82,7 +82,7 @@ def detect_density(request: DensityEvaluationRequest):
     result["junction_id"] = request.junction_id
     return result
 
-# 2. Risky Driving / Cut-Maarna Trajectory Analysis
+# 2. Risky Driving / Aggressive Lane Cut Trajectory Analysis
 @app.post("/api/ml/analyze-risk")
 def analyze_risk(request: RiskAnalysisRequest):
     points = [p.dict() for p in request.trajectory]

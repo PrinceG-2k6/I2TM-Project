@@ -48,7 +48,7 @@ let activeSimulation = {
     {
       id: 'ALT-102',
       time: '14:21:40',
-      title: 'Erratic Trajectory (Cut-Maarna) Detected',
+      title: 'Aggressive Lane Cut & Swerve Detected',
       description: 'Vehicle DL-04-TC-201 performed abrupt 38° lane swerve across 3 lanes at 58 km/h.',
       severity: 'WARNING',
       type: 'RISKY_MOVEMENT',

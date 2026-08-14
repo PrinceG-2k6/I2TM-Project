@@ -387,6 +387,12 @@ Node.js Web Backend (Express + WebSockets):
           - Added dynamic live count badges to each severity tab (e.g. `All Alerts (4)`, `Critical (1)`, `Warning (2)`, `Healthy (1)`).
           - Updated `CongestionAlerts.jsx` to apply severity filtering instantaneously with instant empty state handling and reset actions.
 
+[LOG-029] Unified SARATHI (सारथी) Browser Tab Name & Global Terminology Cleanup
+          - Updated `index.html` title tag to:
+            `<title>SARATHI (सारथी) — Government Traffic Safety & Accident Prevention Command</title>`.
+          - Updated `Spline3DScene.jsx` badge to `SARATHI 3D DIGITAL TWIN · INTERACTIVE`.
+          - Cleaned up and replaced all occurrences of "Cut-Maarna" across backend endpoints (`server.js`, `main.py`, `risk_analyzer.py`, `config.py`) and inventory documentation (`HARDCODED_ITEMS.txt`) with `Lane Cut & Swerve AI`.
+
 ====================================================================================================
 KEY USP:
 "SARATHI (सारथी) Adaptive Signal Intelligence combines real-time density, congestion alerts,
