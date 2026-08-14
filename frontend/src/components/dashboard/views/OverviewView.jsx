@@ -127,7 +127,7 @@ export const OverviewView = ({ onNavigateTab }) => {
             {emergency.active ? `ACTIVE (${emergency.countdownSeconds}s)` : 'Standby / Ready'}
           </div>
           <div style={{ fontSize: '12px', color: emergency.active ? '#B91C1C' : 'var(--text-muted)', marginTop: '4px' }}>
-            {emergency.active ? 'Ambulance DL-01-AMB-889 cleared →' : 'Simulate in sidebar to trigger run →'}
+            {emergency.active ? `${emergency.vehicleLabel || 'Emergency Vehicle'} ${emergency.vehicleId || 'DL-01-AMB-889'} cleared →` : 'Simulate in sidebar or Guards to trigger run →'}
           </div>
         </div>
       </div>

@@ -498,6 +498,14 @@ Node.js Web Backend (Express + WebSockets):
             * Interactive Geospatial Digital Twin Grid Map
             * 3D Spline Digital Twin Simulation (Full-Screen SaaS Hero)
 
+[LOG-031] Dynamic Multi-Service Emergency Vehicle Selection & Dashboard Synchronization
+          - Enhanced `TrafficContext.jsx` with full `EMERGENCY_PRESETS` registry supporting:
+            * **Ambulance (`DL-01-AMB-889`)** -> `AIIMS Trauma Center`
+            * **Fire Engine (`DL-02-FIRE-101`)** -> `Connaught Commercial Hub`
+            * **Police Patrol (`DL-01-POL-999`)** -> `VIP Outer Ring Escort`
+          - Updated `GreenCorridorPanel.jsx` to dynamically trigger the active vehicle class (Ambulance, Fire Engine, or Police Patrol).
+          - Synchronized dynamic vehicle icons, IDs, destination hubs, and roadside VMS broadcast messages across `OverviewView.jsx`, `AccidentHazardBanner.jsx`, `RoadsideDisplayBoard.jsx`, and `MapView.jsx`.
+
 ====================================================================================================
 KEY USP:
 "SARATHI (सारथी) Adaptive Signal Intelligence combines real-time density, congestion alerts,

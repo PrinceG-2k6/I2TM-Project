@@ -394,14 +394,14 @@ export const MapView = () => {
                   {/* Glowing aura */}
                   <circle r="22" fill="rgba(220, 38, 38, 0.4)" className="animate-pulse-slow" />
                   <circle r="14" fill="#DC2626" stroke="#FFFFFF" strokeWidth="2.5" />
-                  <text x="-6" y="5" fill="#FFFFFF" fontSize="12" fontWeight="bold">
-                    🚑
+                  <text x="-7" y="5" fill="#FFFFFF" fontSize="13" fontWeight="bold">
+                    {emergency.vehicleIcon || '🚑'}
                   </text>
-                  {/* Ambulance Tooltip */}
+                  {/* Vehicle Tooltip */}
                   <g transform="translate(18, -18)">
-                    <rect x="0" y="0" width="130" height="24" rx="4" fill="#0F172A" stroke="#EF4444" strokeWidth="1" />
+                    <rect x="0" y="0" width="160" height="24" rx="4" fill="#0F172A" stroke="#EF4444" strokeWidth="1" />
                     <text x="8" y="15" fill="#F8FAFC" fontSize="10" fontWeight="bold">
-                      DL-01-AMB ({emergency.countdownSeconds}s ETA)
+                      {emergency.vehicleId || 'DL-01-AMB'} ({emergency.countdownSeconds}s ETA)
                     </text>
                   </g>
                 </g>

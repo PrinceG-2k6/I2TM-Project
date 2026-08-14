@@ -91,7 +91,7 @@ export const RoadsideDisplayBoard = () => {
               textShadow: emergency.active ? '0 0 12px rgba(254, 240, 138, 0.5)' : '0 0 8px rgba(103, 232, 249, 0.4)'
             }}
           >
-            {emergency.active ? '⚠️ AMBULANCE APPROACHING ⚠️' : 'FLOW IS SMOOTH · DRIVE SAFELY'}
+            {emergency.active ? `⚠️ ${emergency.vehicleLabel ? emergency.vehicleLabel.toUpperCase() : 'EMERGENCY VEHICLE'} APPROACHING ⚠️` : 'FLOW IS SMOOTH · DRIVE SAFELY'}
           </div>
 
           <div

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Siren, HeartPulse, Flame, Shield, Navigation, Clock, ShieldAlert, CheckCircle2 } from 'lucide-react';
-import { useTraffic } from '../../context/TrafficContext';
+import { useTraffic, EMERGENCY_PRESETS } from '../../context/TrafficContext';
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
 
 export const GreenCorridorPanel = () => {
   const { emergency, triggerEmergencyCorridor, resetEmergencyCorridor } = useTraffic();
-  const [emergencyType, setEmergencyType] = useState('AMBULANCE'); // 'AMBULANCE' | 'FIRE' | 'POLICE'
+  const [emergencyType, setEmergencyType] = useState(emergency.vehicleType || 'AMBULANCE'); // 'AMBULANCE' | 'FIRE' | 'POLICE'
 
   const emergencyServices = [
     {
@@ -46,13 +46,25 @@ export const GreenCorridorPanel = () => {
 
   const activeService = emergencyServices.find((s) => s.id === emergencyType) || emergencyServices[0];
 
+  const handleSelectService = (serviceId) => {
+    setEmergencyType(serviceId);
+    if (emergency.active) {
+      // Re-trigger with new vehicle type if corridor is currently running
+      triggerEmergencyCorridor(emergency.patientSeverity || 'CRITICAL', serviceId);
+    }
+  };
+
+  const handleTriggerSeverity = (sev) => {
+    triggerEmergencyCorridor(sev, emergencyType);
+  };
+
   return (
     <div
       style={{
         backgroundColor: 'var(--bg-surface)',
-        border: emergency.active ? '2px solid #DC2626' : '1px solid var(--border-warm)',
+        border: emergency.active ? `2px solid ${activeService.color}` : '1px solid var(--border-warm)',
         borderRadius: 'var(--radius-lg)',
-        boxShadow: emergency.active ? '0 8px 30px rgba(220, 38, 38, 0.15)' : 'var(--shadow-card)',
+        boxShadow: emergency.active ? `0 8px 30px ${activeService.color}25` : 'var(--shadow-card)',
         padding: '24px',
         position: 'relative',
         overflow: 'hidden'
@@ -67,7 +79,7 @@ export const GreenCorridorPanel = () => {
             left: 0,
             right: 0,
             height: '4px',
-            backgroundColor: '#DC2626'
+            backgroundColor: activeService.color
           }}
         />
       )}
@@ -80,8 +92,8 @@ export const GreenCorridorPanel = () => {
               width: 40,
               height: 40,
               borderRadius: 'var(--radius-sm)',
-              backgroundColor: emergency.active ? '#FEE2E2' : 'var(--primary-orange-soft)',
-              color: emergency.active ? '#DC2626' : 'var(--primary-orange-dark)',
+              backgroundColor: emergency.active ? activeService.badgeBg : 'var(--primary-orange-soft)',
+              color: emergency.active ? activeService.color : 'var(--primary-orange-dark)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
@@ -109,7 +121,7 @@ export const GreenCorridorPanel = () => {
 
           {emergency.active && (
             <Badge variant="critical" pulsing>
-              🚨 CORRIDOR ACTIVE
+              🚨 {emergency.vehicleLabel || 'CORRIDOR'} ACTIVE
             </Badge>
           )}
         </div>
@@ -128,7 +140,7 @@ export const GreenCorridorPanel = () => {
             return (
               <button
                 key={srv.id}
-                onClick={() => setEmergencyType(srv.id)}
+                onClick={() => handleSelectService(srv.id)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -141,7 +153,8 @@ export const GreenCorridorPanel = () => {
                   fontWeight: '800',
                   fontSize: '13px',
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease'
+                  transition: 'all 0.15s ease',
+                  boxShadow: isSelected ? `0 2px 8px ${srv.color}30` : 'none'
                 }}
               >
                 <Icon size={16} color={srv.color} />
@@ -150,6 +163,35 @@ export const GreenCorridorPanel = () => {
             );
           })}
         </div>
+      </div>
+
+      {/* Priority Selector Tabs */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-body)' }}>
+          Select Triage Urgency:
+        </span>
+        {['CRITICAL', 'SERIOUS', 'STABLE'].map((sev) => {
+          const isSelected = emergency.patientSeverity === sev;
+          return (
+            <button
+              key={sev}
+              onClick={() => handleTriggerSeverity(sev)}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 'var(--radius-full)',
+                fontSize: '12px',
+                fontWeight: '700',
+                backgroundColor: isSelected ? (sev === 'CRITICAL' ? '#DC2626' : sev === 'SERIOUS' ? '#F59E0B' : '#16A34A') : 'var(--bg-surface-warm)',
+                color: isSelected ? '#FFFFFF' : 'var(--text-body)',
+                border: isSelected ? '1px solid transparent' : '1px solid var(--border-warm)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              {sev} {sev === 'CRITICAL' ? '(90s)' : sev === 'SERIOUS' ? '(60s)' : '(30s)'}
+            </button>
+          );
+        })}
       </div>
 
       {/* Corridor Telemetry Grid with Clear Identification */}
@@ -167,10 +209,10 @@ export const GreenCorridorPanel = () => {
             EMERGENCY VEHICLE
           </div>
           <div style={{ fontSize: '16px', fontWeight: '900', color: activeService.color, fontFamily: 'monospace' }}>
-            {activeService.vehicleId}
+            {emergency.active ? (emergency.vehicleId || activeService.vehicleId) : activeService.vehicleId}
           </div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            {activeService.priority}
+            {emergency.active ? (emergency.vehicleLabel || activeService.label) : activeService.label} • {activeService.priority}
           </div>
         </div>
 
@@ -180,7 +222,7 @@ export const GreenCorridorPanel = () => {
             DESTINATION HUB
           </div>
           <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-main)' }}>
-            {activeService.destination}
+            {emergency.active ? (emergency.hospital || activeService.destination) : activeService.destination}
           </div>
         </div>
 
@@ -223,7 +265,7 @@ export const GreenCorridorPanel = () => {
           <ShieldAlert size={18} color="var(--primary-orange)" />
           <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-main)' }}>
             {emergency.active
-              ? `🚨 Signal Override Active: Continuous Green on East Approach for ${activeService.label}. All civilian lanes held.`
+              ? `🚨 Signal Override Active: Continuous Green on East Approach for ${emergency.vehicleLabel || activeService.label}. All civilian lanes held.`
               : `Signal in balanced adaptive mode. Ready to pre-clear corridor for ${activeService.label}.`}
           </span>
         </div>
@@ -233,7 +275,7 @@ export const GreenCorridorPanel = () => {
             End Corridor
           </Button>
         ) : (
-          <Button variant="primary" size="sm" icon={Siren} onClick={() => triggerEmergencyCorridor('CRITICAL')}>
+          <Button variant="primary" size="sm" icon={Siren} onClick={() => triggerEmergencyCorridor('CRITICAL', emergencyType)} style={{ backgroundColor: activeService.color }}>
             Trigger {activeService.label} Corridor
           </Button>
         )}

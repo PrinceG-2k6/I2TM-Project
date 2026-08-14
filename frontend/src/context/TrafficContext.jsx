@@ -2,6 +2,46 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const TrafficContext = createContext(null);
 
+// Emergency Vehicle Presets
+export const EMERGENCY_PRESETS = {
+  AMBULANCE: {
+    vehicleType: 'AMBULANCE',
+    vehicleLabel: 'Ambulance',
+    vehicleIcon: '🚑',
+    vehicleId: 'DL-01-AMB-889',
+    destination: 'AIIMS Trauma Center',
+    hospital: 'AIIMS Trauma Center',
+    origin: 'Connaught Place Outer Circle',
+    distanceMeters: 850,
+    priorityTag: 'CRITICAL (Priority 1)',
+    color: '#DC2626'
+  },
+  FIRE: {
+    vehicleType: 'FIRE',
+    vehicleLabel: 'Fire Engine',
+    vehicleIcon: '🚒',
+    vehicleId: 'DL-02-FIRE-101',
+    destination: 'Connaught Commercial Hub',
+    hospital: 'Connaught Commercial Hub',
+    origin: 'Central Fire Station HQ',
+    distanceMeters: 1100,
+    priorityTag: 'URGENT RESCUE (Priority 1)',
+    color: '#EA580C'
+  },
+  POLICE: {
+    vehicleType: 'POLICE',
+    vehicleLabel: 'Police Patrol',
+    vehicleIcon: '🚓',
+    vehicleId: 'DL-01-POL-999',
+    destination: 'VIP Outer Ring Escort',
+    hospital: 'VIP Outer Ring Escort',
+    origin: 'Police Control Room Node',
+    distanceMeters: 650,
+    priorityTag: 'TACTICAL (Priority 2)',
+    color: '#2563EB'
+  }
+};
+
 // Junction Preset Profiles
 const JUNCTION_PROFILES = {
   'J-04 Ring Road South': {
@@ -63,15 +103,20 @@ export const TrafficProvider = ({ children }) => {
     }
   };
 
-  // Emergency & Green Corridor Triage
+  // Emergency & Green Corridor Triage State
   const [emergency, setEmergency] = useState({
     active: false,
+    vehicleType: 'AMBULANCE',
+    vehicleLabel: 'Ambulance',
+    vehicleIcon: '🚑',
     ambulanceId: 'DL-01-AMB-889',
+    vehicleId: 'DL-01-AMB-889',
     patientSeverity: 'CRITICAL', // 'CRITICAL' | 'SERIOUS' | 'STABLE'
     triageLevel: 'RED', // 'RED' | 'YELLOW' | 'GREEN'
     etaSeconds: 90,
     countdownSeconds: 90,
     hospital: 'AIIMS Trauma Center',
+    destination: 'AIIMS Trauma Center',
     origin: 'Connaught Place Outer Circle',
     distanceMeters: 850,
     routeCongestionPct: 88.0,
@@ -98,35 +143,48 @@ export const TrafficProvider = ({ children }) => {
       id: 'ALT-102',
       time: '14:21:40',
       title: "Manually set 'Lane Cut Guard' to active with reason 'erratic swerve pattern detected'.",
-      description: 'Vehicle DL-04-TC-201 performed abrupt 38° lane swerve across 3 lanes at 58 km/h.',
+      description: 'Vehicle DL-04-TC-201 performed abrupt 38° lane swerve across 3 lanes at 58 km/h. Marshal alert dispatched.',
       severity: 'WARNING',
       type: 'RISKY_MOVEMENT',
       author: 'Toby',
       role: 'Vision ML',
-      feature: 'Lane Cut AI',
-      service: 'Vision Density Detector',
-      tags: ['Feature', 'Manual']
+      feature: 'Lane Cut Guard',
+      service: 'Vision Trajectory Interceptor',
+      tags: ['Vision AI', 'Security']
     },
     {
       id: 'ALT-103',
       time: '14:18:05',
-      title: "'Support tools UI' was updated due to traffic spike as it is a priority 90 feature and spike was from 'Checkout'.",
-      description: 'Ambulance DL-01-AMB-889 en route with Critical patient. Roadside display set to 90s countdown.',
+      title: 'Support tools UI updated due to traffic spike on South Flyover.',
+      description: 'Density on South Flyover approached 75%. Signal timing automatically recalibrated.',
       severity: 'HEALTHY',
-      type: 'EMERGENCY_CORRIDOR',
-      author: 'Rob Ocel',
-      role: 'Operator',
-      feature: 'Green Corridor Dispatch',
-      service: 'Emergency Triage Engine',
-      tags: ['System', 'Emergency', 'Ecommerce']
+      type: 'SYSTEM',
+      author: 'AI Dispatch',
+      role: 'System',
+      feature: 'Signal Timing Engine',
+      service: 'Dynamic Signal Optimizer',
+      tags: ['System', 'Optimization']
     },
     {
       id: 'ALT-104',
-      time: '14:12:30',
-      title: "Signal Controller recalibrated for 'North Approach' due to moderate queue reduction.",
-      description: 'Density reduced from 84% to 76%. Green time balanced to 35 seconds.',
+      time: '14:15:22',
+      title: 'Emergency Corridor Pre-Clear Triggered on East Approach.',
+      description: 'Ambulance DL-01-AMB-889 dispatched. Roadside display set to 90s countdown.',
+      severity: 'CRITICAL',
+      type: 'EMERGENCY_CORRIDOR',
+      author: 'AI Dispatch',
+      role: 'System',
+      feature: 'Green Corridor Dispatch',
+      service: 'Emergency Triage Engine',
+      tags: ['Emergency', 'Live']
+    },
+    {
+      id: 'ALT-105',
+      time: '14:10:00',
+      title: 'Automatic Adaptive Cycle Recalibrated for Afternoon Peak.',
+      description: 'Cycle length adjusted to 110s across all 4 phases based on live vehicle queue sizes.',
       severity: 'HEALTHY',
-      type: 'CONGESTION',
+      type: 'SYSTEM',
       author: 'System',
       role: 'System',
       feature: 'Internal Reports',
@@ -184,13 +242,13 @@ export const TrafficProvider = ({ children }) => {
             ...prev,
             active: false,
             countdownSeconds: 0,
-            roadsideMessage: 'Emergency vehicle cleared. Adaptive signal flow resumed.'
+            roadsideMessage: `${prev.vehicleLabel || 'Emergency vehicle'} cleared. Adaptive signal flow resumed.`
           };
         }
         return {
           ...prev,
           countdownSeconds: nextSec,
-          roadsideMessage: 'Ambulance approaching. Keep left lane clear.'
+          roadsideMessage: `${prev.vehicleLabel || 'Emergency vehicle'} approaching. Keep left lane clear.`
         };
       });
 
@@ -213,23 +271,29 @@ export const TrafficProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, [isLiveSimulating]);
 
-  // Trigger Emergency Corridor
-  const triggerEmergencyCorridor = (severity = 'CRITICAL') => {
+  // Trigger Emergency Corridor with Dynamic Vehicle Support (Ambulance, Fire, Police)
+  const triggerEmergencyCorridor = (severity = 'CRITICAL', vehicleType = 'AMBULANCE') => {
     const countdown = severity === 'CRITICAL' ? 90 : severity === 'SERIOUS' ? 60 : 30;
     const triage = severity === 'CRITICAL' ? 'RED' : severity === 'SERIOUS' ? 'YELLOW' : 'GREEN';
+    const preset = EMERGENCY_PRESETS[vehicleType] || EMERGENCY_PRESETS.AMBULANCE;
 
     setEmergency({
       active: true,
-      ambulanceId: 'DL-01-AMB-889',
+      vehicleType: preset.vehicleType,
+      vehicleLabel: preset.vehicleLabel,
+      vehicleIcon: preset.vehicleIcon,
+      ambulanceId: preset.vehicleId,
+      vehicleId: preset.vehicleId,
       patientSeverity: severity,
       triageLevel: triage,
       etaSeconds: countdown,
       countdownSeconds: countdown,
-      hospital: 'AIIMS Trauma Center',
-      origin: 'Connaught Place Outer Circle',
-      distanceMeters: 850,
+      hospital: preset.destination,
+      destination: preset.destination,
+      origin: preset.origin,
+      distanceMeters: preset.distanceMeters,
       routeCongestionPct: 88.0,
-      roadsideMessage: 'Ambulance approaching. Keep left lane clear.',
+      roadsideMessage: `${preset.vehicleLabel} approaching. Keep left lane clear.`,
       targetApproach: 'East Commercial Arterial'
     });
 
@@ -244,15 +308,15 @@ export const TrafficProvider = ({ children }) => {
       {
         id: `ALT-${Date.now().toString().slice(-4)}`,
         time: new Date().toLocaleTimeString(),
-        title: `Emergency Green Corridor Activated (${severity} Priority)`,
-        description: `Ambulance DL-01-AMB-889 dispatched. Roadside screens broadcast ${countdown}s hold time. Conflicting approaches held.`,
+        title: `Emergency Green Corridor: ${preset.vehicleLabel} (${severity} Priority)`,
+        description: `${preset.vehicleLabel} ${preset.vehicleId} en route to ${preset.destination}. Roadside screens broadcast ${countdown}s hold time. Conflicting approaches held.`,
         severity: 'CRITICAL',
         type: 'EMERGENCY_CORRIDOR',
         author: 'Rob Ocel',
         role: 'Operator',
         feature: 'Green Corridor Dispatch',
         service: 'Emergency Triage Engine',
-        tags: ['Emergency', 'Feature', 'Live']
+        tags: ['Emergency', preset.vehicleLabel, 'Live']
       },
       ...prev
     ]);

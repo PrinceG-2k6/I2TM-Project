@@ -82,7 +82,7 @@ export const AccidentHazardBanner = ({ onNavigateGuards }) => {
 
           <div style={{ fontSize: '15px', fontWeight: '800', color: '#FFFFFF', lineHeight: 1.3 }}>
             {emergency.active
-              ? `Ambulance DL-01-AMB-889 en route to AIIMS Trauma Hub. All conflicting signals held RED.`
+              ? `${emergency.vehicleIcon || '🚨'} ${emergency.vehicleLabel || 'Emergency Vehicle'} ${emergency.vehicleId || 'DL-01-AMB-889'} en route to ${emergency.destination || emergency.hospital || 'AIIMS Trauma Hub'}. All conflicting signals held RED.`
               : 'Erratic 38° Lane Swerve & Queue Spill Flagged on East Approach. Upstream Signal Held to Prevent T-Bone Collision.'}
           </div>
         </div>
