@@ -24,6 +24,7 @@ def _serialize_traffic_observation(document: dict[str, Any]) -> dict[str, Any]:
     return {
         "id": str(document["_id"]),
         "junction_id": str(document["junction_id"]),
+        "direction": document.get("direction", "UNKNOWN"),
         "vehicle_count": document["vehicle_count"],
         "cars": document["cars"],
         "motorcycles": document["motorcycles"],

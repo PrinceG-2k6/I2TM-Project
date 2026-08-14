@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, field_validator
 
 class TrafficObservationCreate(BaseModel):
     junction_id: str
+    direction: str = "UNKNOWN"
     vehicle_count: int = Field(..., ge=0)
     cars: int = Field(..., ge=0)
     motorcycles: int = Field(..., ge=0)
@@ -21,10 +22,20 @@ class TrafficObservationCreate(BaseModel):
             raise ValueError("Invalid junction ID")
         return value
 
+    @field_validator("direction")
+    @classmethod
+    def validate_direction(cls, value: str) -> str:
+        allowed_directions = {"NORTH", "SOUTH", "EAST", "WEST", "UNKNOWN"}
+        normalized_value = value.strip().upper()
+        if normalized_value not in allowed_directions:
+            raise ValueError("Direction must be NORTH, SOUTH, EAST, WEST, or UNKNOWN")
+        return normalized_value
+
 
 class TrafficObservationResponse(BaseModel):
     id: str
     junction_id: str
+    direction: str
     vehicle_count: int
     cars: int
     motorcycles: int

@@ -56,8 +56,30 @@ Implemented Traffic APIs:
 - `POST /api/v1/traffic`
 - `GET /api/v1/traffic/current/{junction_id}`
 - `GET /api/v1/traffic/history/{junction_id}`
+- `GET /api/v1/traffic/density/{junction_id}`
+- `POST /api/v1/traffic/congestion/alerts/{junction_id}`
+- `GET /api/v1/traffic/congestion/alerts/{junction_id}`
 
 MongoDB connection and basic database operations are also configured.
+
+### Task 4 — Traffic Density
+
+- Direction-aware density snapshot for each junction using latest observation per direction.
+- Density formula: `vehicle_count / lanes`.
+- Density levels:
+  - LOW: `< 20`
+  - MEDIUM: `>= 20` and `< 40`
+  - HIGH: `>= 40`
+
+### Task 5 — Congestion Detection
+
+- Congestion score combines density, speed, and queue length:
+  - `score = 0.40*density_score + 0.35*speed_score + 0.25*queue_score`
+- Congestion levels:
+  - WARNING: `< 1.9`
+  - CONGESTED: `>= 1.9` and `< 2.6`
+  - CRITICAL: `>= 2.6`
+- Alert history is persisted in MongoDB collection `congestion_alerts`.
 
 ## Docker Setup
 

@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     mongodb_uri: str = "mongodb://localhost:27017"
     mongodb_database: str = "adaptive_signal_intelligence"
     cors_origins: list[str] = ["http://localhost:5173"]
+    density_low_max: float = 20.0
+    density_medium_max: float = 40.0
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

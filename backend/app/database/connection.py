@@ -18,3 +18,7 @@ def get_junction_collection() -> Collection:
 
 def get_traffic_collection() -> Collection:
     return get_database()["traffic_observations"]
+
+
+def get_congestion_alert_collection() -> Collection:
+    return get_database()["congestion_alerts"]
