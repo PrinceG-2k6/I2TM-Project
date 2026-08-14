@@ -5,7 +5,7 @@ import { DensityModule } from '../DensityModule';
 import { SignalControlPreview } from '../SignalControlPreview';
 import { useTraffic } from '../../../context/TrafficContext';
 import { Badge } from '../../common/Badge';
-import { ArrowUpRight, ShieldAlert, AlertTriangle, Activity } from 'lucide-react';
+import { ArrowUpRight, ShieldCheck, Siren } from 'lucide-react';
 
 export const OverviewView = ({ onNavigateTab }) => {
   const { approaches, emergency, selectedJunction } = useTraffic();
@@ -17,10 +17,14 @@ export const OverviewView = ({ onNavigateTab }) => {
 
   return (
     <div className="view-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* 1. High-Priority Government Accident Prevention Alert Banner */}
-      <AccidentHazardBanner onNavigateGuards={() => onNavigateTab && onNavigateTab('guards')} />
+      {/* 1. Emergency Red Corridor Banner - ONLY shown when Emergency Corridor is Actively Simulated/Triggered */}
+      {emergency.active && (
+        <div className="view-fade-in">
+          <AccidentHazardBanner onNavigateGuards={() => onNavigateTab && onNavigateTab('guards')} />
+        </div>
+      )}
 
-      {/* 2. Overview Stat Cards Row with Accident Hazard Highlight */}
+      {/* 2. Overview Stat Cards Row */}
       <div
         data-subsection="Junction Health & Load Metrics"
         style={{
@@ -53,30 +57,6 @@ export const OverviewView = ({ onNavigateTab }) => {
           </div>
         </div>
 
-        {/* Accident Risk Radar Card */}
-        <div
-          style={{
-            backgroundColor: '#FEF2F2',
-            border: '2px solid #F87171',
-            borderRadius: 'var(--radius-lg)',
-            padding: '18px 20px',
-            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ fontSize: '12px', fontWeight: '800', color: '#DC2626', letterSpacing: '0.04em' }}>
-              ACCIDENT HAZARD RADAR
-            </span>
-            <ShieldAlert size={16} color="#DC2626" />
-          </div>
-          <div style={{ fontSize: '24px', fontWeight: '900', color: '#B91C1C', fontFamily: 'var(--font-heading)' }}>
-            HIGH RISK (84%)
-          </div>
-          <div style={{ fontSize: '12px', color: '#991B1B', fontWeight: '600', marginTop: '2px' }}>
-            Erratic swerve detected on East approach
-          </div>
-        </div>
-
         {/* Total Vehicles Card */}
         <div
           style={{
@@ -98,6 +78,32 @@ export const OverviewView = ({ onNavigateTab }) => {
           </div>
         </div>
 
+        {/* Average Density Card */}
+        <div
+          style={{
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border-warm)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '18px 20px',
+            boxShadow: 'var(--shadow-subtle)'
+          }}
+        >
+          <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px' }}>
+            AVERAGE JUNCTION DENSITY
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+            <span style={{ fontSize: '28px', fontWeight: '800', color: avgDensity > 70 ? 'var(--status-critical)' : 'var(--text-main)', fontFamily: 'var(--font-heading)' }}>
+              {avgDensity}%
+            </span>
+            <Badge variant={avgDensity > 75 ? 'critical' : avgDensity > 50 ? 'degraded' : 'healthy'} size="sm">
+              {avgDensity > 75 ? 'High Congestion' : 'Moderate Flow'}
+            </Badge>
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            Optimized via AI density allocation
+          </div>
+        </div>
+
         {/* Emergency Status Card */}
         <div
           onClick={() => onNavigateTab && onNavigateTab('guards')}
@@ -108,7 +114,7 @@ export const OverviewView = ({ onNavigateTab }) => {
             padding: '18px 20px',
             boxShadow: emergency.active ? '0 0 16px rgba(220, 38, 38, 0.3)' : 'var(--shadow-subtle)',
             cursor: 'pointer',
-            transition: 'transform 0.15s ease'
+            transition: 'all 0.15s ease'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -121,7 +127,7 @@ export const OverviewView = ({ onNavigateTab }) => {
             {emergency.active ? `ACTIVE (${emergency.countdownSeconds}s)` : 'Standby / Ready'}
           </div>
           <div style={{ fontSize: '12px', color: emergency.active ? '#B91C1C' : 'var(--text-muted)', marginTop: '4px' }}>
-            {emergency.active ? 'Click to inspect triage corridor →' : 'Click to trigger ambulance run →'}
+            {emergency.active ? 'Ambulance DL-01-AMB-889 cleared →' : 'Simulate in sidebar to trigger run →'}
           </div>
         </div>
       </div>
