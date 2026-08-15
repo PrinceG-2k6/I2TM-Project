@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Radio, Search, MapPin, Crosshair, ChevronDown, Check, Sliders } from 'lucide-react';
-import { useTraffic, INDIAN_CITIES } from '../../context/TrafficContext';
+import { useTraffic } from '../../context/TrafficContext';
+import { INDIAN_CITIES } from '../../data/dummyData';
 import { Button } from '../common/Button';
 
 export const Topbar = ({
@@ -162,12 +163,12 @@ export const Topbar = ({
       </div>
       <div className="flex items-center gap-2.5 shrink-0">
         <div
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-nowrap ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-nowrap ${
             emergency.active ? 'bg-red-50' : 'bg-green-50'
           }`}
         >
           <span
-            className={`w-2 h-2 rounded-full ${
+            className={`w-1.5 h-1.5 rounded-full ${
               emergency.active ? 'bg-red-600 animate-pulse-slow' : 'bg-green-600'
             }`}
           />
@@ -184,7 +185,7 @@ export const Topbar = ({
           size="sm"
           icon={Radio}
           onClick={() => setIsLiveSimulating(!isLiveSimulating)}
-          className="whitespace-nowrap px-3 py-1.5"
+          className="whitespace-nowrap px-3"
         >
           {isLiveSimulating ? 'Live Feeds' : 'Paused'}
         </Button>

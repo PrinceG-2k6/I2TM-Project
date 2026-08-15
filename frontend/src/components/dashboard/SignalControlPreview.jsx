@@ -1,5 +1,3 @@
-import React from 'react';
-import { Sliders, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { useTraffic } from '../../context/TrafficContext';
 import { Badge } from '../common/Badge';
 
@@ -8,17 +6,9 @@ export const SignalControlPreview = () => {
   const emergency = activeCorridors && activeCorridors.length > 0 ? activeCorridors[0] : { active: false };
 
   return (
-    <div
-      style={{
-        backgroundColor: 'var(--bg-surface)',
-        border: '1px solid var(--border-warm)',
-        borderRadius: 'var(--radius-lg)',
-        boxShadow: 'var(--shadow-card)',
-        padding: '24px'
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-main)' }}>
+    <div className="bg-(--bg-surface) border border-(--border-warm) rounded-[var(--radius-lg)] shadow-[var(--shadow-card)] p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-[18px] font-extrabold text-(--text-main)">
           Signal Control Preview
         </h3>
         {emergency.active && (
@@ -28,71 +18,32 @@ export const SignalControlPreview = () => {
         )}
       </div>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-          gap: '12px'
-        }}
-      >
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3">
         {Object.entries(approaches).map(([dir, app]) => {
           const isGreen = app.currentLight === 'GREEN';
           return (
             <div
               key={dir}
-              style={{
-                backgroundColor: 'var(--bg-surface-warm)',
-                border: '1px solid var(--border-warm)',
-                borderRadius: 'var(--radius-md)',
-                padding: '14px',
-                textAlign: 'center'
-              }}
+              className="bg-(--bg-surface-warm) border border-(--border-warm) rounded-[var(--radius-md)] p-3.5 text-center"
             >
-              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '8px' }}>
+              <div className="text-[12px] font-bold text-(--text-muted) mb-2">
                 {dir.toUpperCase()}
               </div>
 
               {/* Physical Signal Box UI */}
-              <div
-                style={{
-                  display: 'inline-flex',
-                  flexDirection: 'column',
-                  gap: '6px',
-                  backgroundColor: '#1E293B',
-                  padding: '8px 10px',
-                  borderRadius: '16px',
-                  marginBottom: '10px'
-                }}
-              >
+              <div className="inline-flex flex-col gap-1.5 bg-slate-800 py-2 px-2.5 rounded-2xl mb-2.5">
                 <div
-                  style={{
-                    width: 18,
-                    height: 18,
-                    borderRadius: '50%',
-                    backgroundColor: !isGreen ? '#EF4444' : '#475569',
-                    boxShadow: !isGreen ? '0 0 10px #EF4444' : 'none'
-                  }}
+                  className={`w-4.5 h-4.5 rounded-full ${!isGreen ? 'bg-red-500 shadow-[0_0_10px_#EF4444]' : 'bg-slate-600'}`}
                 />
                 <div
-                  style={{
-                    width: 18,
-                    height: 18,
-                    borderRadius: '50%',
-                    backgroundColor: '#475569'
-                  }}
+                  className="w-4.5 h-4.5 rounded-full bg-slate-600"
                 />
                 <div
-                  style={{
-                    width: 18,
-                    height: 18,
-                    borderRadius: '50%',
-                    backgroundColor: isGreen ? '#22C55E' : '#475569',
-                    boxShadow: isGreen ? '0 0 10px #22C55E' : 'none'
-                  }}
+                  className={`w-4.5 h-4.5 rounded-full ${isGreen ? 'bg-green-500 shadow-[0_0_10px_#22C55E]' : 'bg-slate-600'}`}
                 />
               </div>
 
-              <div style={{ fontSize: '13px', fontWeight: '800', color: isGreen ? 'var(--status-healthy)' : 'var(--status-critical)' }}>
+              <div className={`text-[13px] font-extrabold ${isGreen ? 'text-(--status-healthy)' : 'text-(--status-critical)'}`}>
                 {app.currentLight} ({app.greenSec}s)
               </div>
             </div>

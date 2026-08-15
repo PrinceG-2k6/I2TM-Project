@@ -30,8 +30,7 @@ export const Sidebar = ({ activeTab = 'dashboard', onSelectTab, onNavigateLandin
     { id: 'junctions', label: 'Junctions', icon: GitFork },
     { id: 'cameras', label: 'Cameras & Signals', icon: Camera },
     { id: 'incidents', label: 'Live Feed', icon: Radio },
-    { id: 'green-corridors', label: 'Green Corridors', icon: Siren },
-    { id: 'timeline', label: 'Timeline', icon: Clock }
+    { id: 'green-corridors', label: 'Green Corridors', icon: Siren }
   ];
 
   return (

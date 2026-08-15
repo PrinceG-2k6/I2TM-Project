@@ -8,20 +8,12 @@ export const RoadsideDisplayBoard = () => {
   const emergency = activeCorridors && activeCorridors.length > 0 ? activeCorridors[0] : { active: false };
 
   return (
-    <div
-      style={{
-        backgroundColor: 'var(--bg-surface)',
-        border: '1px solid var(--border-warm)',
-        borderRadius: 'var(--radius-lg)',
-        boxShadow: 'var(--shadow-card)',
-        padding: '24px'
-      }}
-    >
+    <div className="bg-(--bg-surface) border border-(--border-warm) rounded-[var(--radius-lg)] shadow-[var(--shadow-card)] p-6">
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
           <Tv size={20} color="var(--primary-orange)" />
-          <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-main)' }}>
+          <h3 className="text-[18px] font-extrabold text-(--text-main)">
             Roadside LED Display Board Preview
           </h3>
         </div>
@@ -31,98 +23,50 @@ export const RoadsideDisplayBoard = () => {
       </div>
 
       {/* Realistic Digital LED Screen Simulation */}
-      <div
-        style={{
-          backgroundColor: '#0F172A',
-          border: '3px solid #1E293B',
-          borderRadius: 'var(--radius-md)',
-          padding: '24px',
-          color: '#F8FAFC',
-          boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.6)',
-          position: 'relative',
-          overflow: 'hidden'
-        }}
-      >
+      <div className="bg-slate-900 border-4 border-slate-800 rounded-[var(--radius-md)] p-6 text-slate-50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.6)] relative overflow-hidden">
         {/* Subtle LED Scanline Effect */}
         <div
+          className="absolute inset-0 pointer-events-none"
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px)',
-            pointerEvents: 'none'
+            backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px)'
           }}
         />
 
         {/* Display Status Bar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="flex items-center justify-between mb-4 border-b border-slate-700 pb-2.5">
+          <div className="flex items-center gap-2">
             <span
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: '50%',
-                backgroundColor: emergency.active ? '#EF4444' : '#22C55E',
-                display: 'inline-block'
-              }}
-              className={emergency.active ? 'animate-pulse-slow' : ''}
+              className={`w-2.5 h-2.5 rounded-full inline-block ${emergency.active ? 'bg-red-500 animate-pulse-slow' : 'bg-green-500'}`}
             />
-            <span style={{ fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', color: emergency.active ? '#F87171' : '#4ADE80', textTransform: 'uppercase' }}>
+            <span className={`text-[12px] font-bold tracking-widest uppercase ${emergency.active ? 'text-red-400' : 'text-green-400'}`}>
               {emergency.active ? 'VMS POLE 04 - EMERGENCY BROADCAST' : 'VMS POLE 04 - ADAPTIVE TRAFFIC INFO'}
             </span>
           </div>
 
-          <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '600', letterSpacing: '0.05em' }}>
+          <span className="text-[11px] text-slate-400 font-semibold tracking-wider">
             FEED: CONNECTED
           </span>
         </div>
 
         {/* Main LED Headline & Message */}
-        <div style={{ textAlign: 'center', padding: '10px 0' }}>
+        <div className="text-center py-2.5">
           <div
-            style={{
-              fontSize: '18px',
-              fontWeight: '800',
-              color: emergency.active ? '#FEF08A' : '#67E8F9',
-              letterSpacing: '0.04em',
-              marginBottom: '12px',
-              textTransform: 'uppercase',
-              textShadow: emergency.active ? '0 0 12px rgba(254, 240, 138, 0.5)' : '0 0 8px rgba(103, 232, 249, 0.4)'
-            }}
+            className={`text-[18px] font-extrabold tracking-wide mb-3 uppercase ${emergency.active ? 'text-yellow-200 drop-shadow-[0_0_12px_rgba(254,240,138,0.5)]' : 'text-cyan-300 drop-shadow-[0_0_8px_rgba(103,232,249,0.4)]'}`}
           >
             {emergency.active ? `⚠️ ${emergency.vehicleLabel ? emergency.vehicleLabel.toUpperCase() : 'EMERGENCY VEHICLE'} APPROACHING ⚠️` : 'FLOW IS SMOOTH · DRIVE SAFELY'}
           </div>
 
           <div
-            style={{
-              fontSize: '22px',
-              fontWeight: '700',
-              lineHeight: 1.4,
-              color: '#FFFFFF',
-              marginBottom: emergency.active ? '18px' : '6px'
-            }}
+            className={`text-[22px] font-bold leading-snug text-white ${emergency.active ? 'mb-4.5' : 'mb-1.5'}`}
           >
             {emergency.active ? 'Keep left lane clear for emergency vehicle' : 'Drive safely. Maintain designated lane.'}
           </div>
 
           {/* Single Dedicated Countdown Timer Display */}
           {emergency.active && (
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '12px',
-                backgroundColor: '#1E293B',
-                padding: '10px 28px',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid #475569',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
-              }}
-            >
+            <div className="inline-flex items-center gap-3 bg-slate-800 py-2.5 px-7 rounded-[var(--radius-md)] border border-slate-600 shadow-[0_4px_12px_rgba(0,0,0,0.4)]">
               <Clock size={22} color="#FBBF24" />
-              <span style={{ fontSize: '28px', fontWeight: '900', color: '#FDE047', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+              <span className="text-[28px] font-black text-yellow-300 font-mono tracking-wider">
                 WAIT: {emergency.countdownSeconds.toString().padStart(2, '0')}s
               </span>
             </div>
@@ -131,8 +75,8 @@ export const RoadsideDisplayBoard = () => {
       </div>
 
       {/* Driver Psychology Note */}
-      <div style={{ marginTop: '16px', display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '12px', color: 'var(--text-muted)' }}>
-        <Sparkles size={16} color="var(--primary-orange)" style={{ flexShrink: 0, marginTop: '2px' }} />
+      <div className="mt-4 flex items-start gap-2 text-[12px] text-(--text-muted)">
+        <Sparkles size={16} color="var(--primary-orange)" className="shrink-0 mt-0.5" />
         <span>
           <strong>Driver Psychology USP:</strong> When drivers see a clear countdown (e.g. 90s), uncertainty is eliminated and lane clearing compliance increases by 84%.
         </span>

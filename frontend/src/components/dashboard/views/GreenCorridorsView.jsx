@@ -1,183 +1,181 @@
 import React from 'react';
-import { useTraffic, EMERGENCY_PRESETS } from '../../../context/TrafficContext';
-import { Siren, Flame, ShieldAlert, Navigation2, MapPin, Zap, CheckCircle2, Clock, Map as MapIcon } from 'lucide-react';
-import { Badge } from '../../common/Badge';
+import { useTraffic } from '../../../context/TrafficContext';
+import { EMERGENCY_PRESETS } from '../../../data/dummyData';
+import { Siren, Flame, ShieldAlert, Navigation2, CheckCircle2, Clock, Map as MapIcon } from 'lucide-react';
 
 export const GreenCorridorsView = () => {
   const { activeCorridors, triggerEmergencyCorridor, removeEmergencyCorridor, activeCity } = useTraffic();
 
   return (
-    <div className="view-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      
-      {/* 1. Header & Dispatch Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="view-fade-in flex flex-col gap-4">
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#0F172A', letterSpacing: '-0.02em', marginBottom: '4px' }}>
-            Active Green Corridors
-          </h2>
-          <p style={{ fontSize: '13px', color: '#64748B', fontWeight: '500' }}>
-            Real-time monitoring of automatically dispatched emergency vehicles on pre-empted routes.
-          </p>
+          <div className="text-sm">Active Green Corridors</div>
+          <div className="text-xs text-(--color-2) mt-0.5">
+            Real-time monitoring of emergency vehicles on pre-empted routes.
+          </div>
         </div>
       </div>
 
-      {/* 2. Active Corridors Dashboard */}
+      {/* Dispatch buttons */}
+      <div className="bg-(--color-4) border border-(--color-3) rounded-sm p-3.5 flex items-center gap-3 flex-wrap">
+        <span className="text-xs text-(--color-2)">Dispatch:</span>
+        {Object.values(EMERGENCY_PRESETS).map((preset) => {
+          const IconComp = preset.vehicleType === 'AMBULANCE' ? Siren : preset.vehicleType === 'FIRE' ? Flame : ShieldAlert;
+          return (
+            <button
+              key={preset.vehicleType}
+              onClick={() => triggerEmergencyCorridor && triggerEmergencyCorridor(preset)}
+              className="flex items-center gap-2 py-1.5 px-3 text-sm border border-(--color-3) rounded-sm cursor-pointer transition-all duration-150 hover:border-(--color-6) hover:text-(--color-6)"
+            >
+              <IconComp size={14} />
+              {preset.vehicleLabel}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Active Corridors */}
       {activeCorridors.length === 0 ? (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '400px', backgroundColor: '#FFFFFF', borderRadius: '20px', border: '2px dashed #E2E8F0' }}>
-          <div style={{ width: 64, height: 64, borderRadius: '16px', backgroundColor: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-            <MapIcon size={28} color="#94A3B8" />
+        <div className="flex flex-col items-center justify-center h-80 bg-(--color-4) border border-(--color-3) rounded-sm">
+          <MapIcon size={24} color="#bfbfbd" className="mb-3" />
+          <div className="text-sm mb-1">No Active Corridors</div>
+          <div className="text-xs text-(--color-2) max-w-xs text-center">
+            Traffic signals are in standard adaptive mode. Dispatch above to create a green corridor.
           </div>
-          <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', marginBottom: '8px' }}>No Active Corridors</h3>
-          <p style={{ fontSize: '13px', color: '#64748B', maxWidth: '300px', textAlign: 'center' }}>
-            Traffic signals are operating in standard adaptive mode. Dispatch an emergency vehicle above to create a green corridor.
-          </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px' }}>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(380px,1fr))] gap-4">
           {activeCorridors.map(corridor => {
             const isArrived = corridor.status === 'ARRIVED';
             const progress = isArrived ? 100 : Math.min(100, Math.max(5, ((corridor.etaSeconds - corridor.countdownSeconds) / corridor.etaSeconds) * 100));
-            
-            // Icon component mapping
             const IconComp = corridor.vehicleType === 'AMBULANCE' ? Siren : corridor.vehicleType === 'FIRE' ? Flame : ShieldAlert;
             const themeColor = corridor.vehicleType === 'AMBULANCE' ? '#DC2626' : corridor.vehicleType === 'FIRE' ? '#EA580C' : '#2563EB';
-            const themeBg = corridor.vehicleType === 'AMBULANCE' ? '#FEF2F2' : corridor.vehicleType === 'FIRE' ? '#FFF7ED' : '#EFF6FF';
-            
+
             return (
               <div
                 key={corridor.id}
-                className="view-fade-in"
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: '20px',
-                  border: `2px solid ${isArrived ? '#86EFAC' : themeBg}`,
-                  boxShadow: `0 8px 32px ${isArrived ? 'rgba(34,197,94,0.1)' : 'rgba(0,0,0,0.06)'}`,
-                  overflow: 'hidden',
-                  position: 'relative'
-                }}
+                className="bg-(--color-4) border border-(--color-3) rounded-sm overflow-hidden"
               >
-                {/* Header (Top half) */}
-                <div style={{ backgroundColor: isArrived ? '#F0FDF4' : themeBg, padding: '24px', borderBottom: `1px solid ${isArrived ? '#86EFAC' : '#E2E8F0'}` }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ width: 48, height: 48, borderRadius: '14px', backgroundColor: isArrived ? '#22C55E' : themeColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: `0 4px 12px ${themeColor}40` }}>
-                        <IconComp size={24} />
+                {/* Header */}
+                <div className="p-4 border-b border-(--color-3)">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-sm border border-(--color-3) bg-(--color-5) flex items-center justify-center">
+                        <IconComp size={18} style={{ color: themeColor }} />
                       </div>
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '16px', fontWeight: '900', color: '#0F172A' }}>
-                            {corridor.vehicleId}
-                          </span>
-                          <span style={{ fontSize: '10px', fontWeight: '800', padding: '3px 8px', borderRadius: '9999px', backgroundColor: '#FFFFFF', color: themeColor, border: `1px solid ${themeColor}40` }}>
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-sm">{corridor.vehicleId}</span>
+                          <span className="text-xs text-(--color-2) border border-(--color-3) bg-(--color-5) py-px px-1.5 rounded-sm">
                             {corridor.vehicleLabel}
                           </span>
                         </div>
-                        <div style={{ fontSize: '12px', color: '#475569', fontWeight: '600' }}>
-                          {corridor.priorityTag || 'Priority 1'} • {corridor.id}
+                        <div className="text-xs text-(--color-2)">
+                          {corridor.priorityTag || 'Priority 1'} · {corridor.id}
                         </div>
                       </div>
                     </div>
-                    
-                    {/* Live Status / ETA */}
-                    <div style={{ textAlign: 'right' }}>
+
+                    {/* ETA / Arrived */}
+                    <div className="text-right">
                       {isArrived ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#15803D', fontWeight: '800', fontSize: '14px', marginBottom: '4px' }}>
-                            <CheckCircle2 size={16} />
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="flex items-center gap-1.5 text-green-700 text-sm">
+                            <CheckCircle2 size={14} />
                             ARRIVED
                           </div>
                           <button
                             onClick={() => removeEmergencyCorridor(corridor.id)}
-                            style={{ fontSize: '11px', color: '#16A34A', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                            className="text-xs text-green-600 underline cursor-pointer bg-transparent border-none p-0"
                           >
                             Clear Corridor
                           </button>
                         </div>
                       ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: themeColor, fontWeight: '800', fontSize: '14px', marginBottom: '4px' }}>
-                            <Clock size={16} className="animate-pulse-slow" />
+                        <div className="flex flex-col items-end gap-0.5">
+                          <div className="flex items-center gap-1.5 text-sm" style={{ color: themeColor }}>
+                            <Clock size={14} className="animate-pulse-slow" />
                             {corridor.countdownSeconds}s ETA
                           </div>
-                          <div style={{ fontSize: '11px', color: '#64748B', fontWeight: '600' }}>
-                            {corridor.distanceMeters}m away
-                          </div>
+                          <div className="text-xs text-(--color-2)">{corridor.distanceMeters}m away</div>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Route Timeline & Map */}
-                  <div style={{ position: 'relative', marginTop: '24px' }}>
-                    {/* Locations */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                        <div style={{ fontSize: '10px', fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', marginBottom: '2px' }}>Origin</div>
-                        <div style={{ fontSize: '12px', fontWeight: '700', color: '#0F172A' }}>{corridor.origin}</div>
+                  {/* Route progress */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <div className="text-xs text-(--color-2)">Origin</div>
+                        <div className="text-xs">{corridor.origin}</div>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        <div style={{ fontSize: '10px', fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', marginBottom: '2px' }}>Destination</div>
-                        <div style={{ fontSize: '12px', fontWeight: '700', color: '#0F172A' }}>{corridor.destination}</div>
+                      <div className="text-right">
+                        <div className="text-xs text-(--color-2)">Destination</div>
+                        <div className="text-xs">{corridor.destination}</div>
                       </div>
                     </div>
 
-                    {/* Progress Bar Container */}
-                    <div style={{ position: 'relative', height: '8px', backgroundColor: '#E2E8F0', borderRadius: '9999px' }}>
-                      <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${progress}%`, backgroundColor: isArrived ? '#22C55E' : themeColor, borderRadius: '9999px', transition: 'width 1s linear' }} />
-                      
-                      {/* Vehicle Marker on Track */}
-                      <div style={{ position: 'absolute', top: '50%', left: `${progress}%`, transform: 'translate(-50%, -50%)', width: 20, height: 20, borderRadius: '50%', backgroundColor: '#FFFFFF', border: `3px solid ${isArrived ? '#22C55E' : themeColor}`, boxShadow: '0 2px 8px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'left 1s linear', zIndex: 10 }}>
-                        <Navigation2 size={10} color={isArrived ? '#22C55E' : themeColor} style={{ transform: 'rotate(45deg)' }} />
+                    <div className="relative h-1.5 bg-(--color-3) rounded-full">
+                      <div
+                        className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-linear"
+                        style={{ width: `${progress}%`, backgroundColor: isArrived ? '#22C55E' : themeColor }}
+                      />
+                      <div
+                        className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2 flex items-center justify-center z-10 transition-all duration-1000 ease-linear"
+                        style={{ left: `${progress}%`, borderColor: isArrived ? '#22C55E' : themeColor }}
+                      >
+                        <Navigation2 size={8} color={isArrived ? '#22C55E' : themeColor} className="rotate-45" />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Footer (Bottom half: Nodes & Telemetry) */}
-                <div style={{ padding: '24px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '800', color: '#0F172A', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span>Route Signal Pre-emption</span>
-                    <Badge variant={isArrived ? 'healthy' : 'critical'} size="sm">
+                {/* Path Nodes */}
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-(--color-2)">Route Signal Pre-emption</span>
+                    <span className="text-xs" style={{ color: isArrived ? '#16A34A' : themeColor }}>
                       {isArrived ? 'Adaptive Flow Restored' : 'Forced Green Override'}
-                    </Badge>
+                    </span>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div className="flex flex-col gap-2">
                     {corridor.pathNodes && corridor.pathNodes.map((node, idx) => {
-                      // Determine status based on overall progress
                       const nodeThreshold = (idx + 1) * (100 / corridor.pathNodes.length);
                       const isPassed = progress > nodeThreshold;
                       const isNext = progress <= nodeThreshold && progress > (idx * (100 / corridor.pathNodes.length));
-                      
                       const nodeStatus = isArrived || isPassed ? 'PASSED' : isNext ? 'APPROACHING' : 'UPCOMING';
-                      
+
                       return (
-                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', backgroundColor: nodeStatus === 'APPROACHING' ? '#F0F9FF' : '#F8FAFC', border: nodeStatus === 'APPROACHING' ? '1px solid #BAE6FD' : '1px solid #F1F5F9' }}>
-                          {/* Signal Light Indicator */}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', backgroundColor: '#1E293B', padding: '4px', borderRadius: '8px' }}>
-                            <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#334155' }} />
-                            <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#334155' }} />
-                            <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: nodeStatus === 'PASSED' ? '#334155' : '#22C55E', boxShadow: nodeStatus === 'PASSED' ? 'none' : '0 0 8px #22C55E' }} />
+                        <div key={idx} className={`flex items-center gap-3 p-2.5 rounded-sm border ${nodeStatus === 'APPROACHING' ? 'bg-(--color-5) border-(--color-6)' : 'bg-(--color-5) border-(--color-3)'}`}>
+                          <div className="flex flex-col gap-0.5 bg-slate-800 p-1 rounded-sm">
+                            <div className="w-2 h-2 rounded-full bg-slate-700" />
+                            <div className="w-2 h-2 rounded-full bg-slate-700" />
+                            <div className={`w-2 h-2 rounded-full ${nodeStatus === 'PASSED' ? 'bg-slate-700' : 'bg-green-500'}`} />
                           </div>
 
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '13px', fontWeight: '700', color: '#0F172A' }}>{node.name}</div>
-                            <div style={{ fontSize: '11px', color: '#64748B' }}>
+                          <div className="flex-1">
+                            <div className="text-sm">{node.name}</div>
+                            <div className="text-xs text-(--color-2)">
                               {nodeStatus === 'PASSED' ? 'Cleared' : nodeStatus === 'APPROACHING' ? 'Forced Green Active' : 'Pre-empted Green'}
                             </div>
                           </div>
 
                           <div>
                             {nodeStatus === 'PASSED' ? (
-                              <CheckCircle2 size={16} color="#94A3B8" />
+                              <span className="text-xs text-(--color-2)">✓</span>
                             ) : nodeStatus === 'APPROACHING' ? (
-                              <span style={{ fontSize: '10px', fontWeight: '800', color: '#0284C7', backgroundColor: '#E0F2FE', padding: '2px 8px', borderRadius: '6px' }}>NEXT</span>
+                              <span className="text-xs text-(--color-6)">NEXT</span>
                             ) : (
-                              <span style={{ fontSize: '10px', fontWeight: '700', color: '#94A3B8' }}>{Math.round(nodeThreshold - progress)}% away</span>
+                              <span className="text-xs text-(--color-2)">{Math.round(nodeThreshold - progress)}%</span>
                             )}
                           </div>
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 </div>

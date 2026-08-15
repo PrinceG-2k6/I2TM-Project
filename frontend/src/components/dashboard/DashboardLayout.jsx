@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
@@ -9,9 +9,8 @@ import { JunctionsView } from './views/JunctionsView';
 import { IncidentsView } from './views/IncidentsView';
 import { CamerasSignalsView } from './views/CamerasSignalsView';
 import { GreenCorridorsView } from './views/GreenCorridorsView';
-import { TimelineView } from './views/TimelineView';
 
-const VALID_TABS = ['dashboard', 'junctions', 'cameras', 'incidents', 'green-corridors', 'timeline'];
+const VALID_TABS = ['dashboard', 'junctions', 'cameras', 'incidents', 'green-corridors'];
 
 export const DashboardLayout = () => {
   const { tab } = useParams();
@@ -92,8 +91,6 @@ export const DashboardLayout = () => {
         return <IncidentsView />;
       case 'green-corridors':
         return <GreenCorridorsView />;
-      case 'timeline':
-        return <TimelineView />;
       default:
         return <OverviewView />;
     }
@@ -102,7 +99,7 @@ export const DashboardLayout = () => {
   return (
     <div className='bg-(--color-1)'>
       <Infobar />
-      <div className="flex w-full h-screen overflow-hidden">
+      <div className="flex w-full h-[calc(100vh-28px)] overflow-hidden">
         <Sidebar
           activeTab={activeTab}
           onSelectTab={handleSelectTab}
@@ -111,14 +108,14 @@ export const DashboardLayout = () => {
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="flex-1 flex flex-col h-full overflow-y-auto bg-(--color-4) text-(--color-1) rounded-tl-sm"
+          className="flex-1 flex flex-col h-full overflow-y-auto bg-(--color-5) text-(--color-1) rounded-tl-sm"
         >
           <Topbar
             activeTab={activeTab}
             activeSubsection={activeSubsection}
             hasMultipleSubsections={hasMultipleSubsections}
           />
-          <main className="w-full mx-auto p-4">
+          <main className="w-full mx-auto p-6">
             {renderActiveView()}
           </main>
         </div>

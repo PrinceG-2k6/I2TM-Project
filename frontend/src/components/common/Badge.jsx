@@ -1,4 +1,14 @@
-import React from 'react';
+const VARIANT_STYLES = {
+  healthy: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  overloaded: 'bg-purple-50 text-purple-700 border-purple-200',
+  degraded: 'bg-amber-50 text-amber-700 border-amber-200',
+  critical: 'bg-red-50 text-red-700 border-red-200',
+  disabled: 'bg-slate-50 text-slate-600 border-slate-200',
+  orange: 'bg-orange-50 text-orange-700 border-orange-200',
+  info: 'bg-blue-50 text-blue-700 border-blue-200',
+  dark: 'bg-slate-900 text-white border-slate-700',
+  default: 'bg-(--color-5) text-(--color-2) border-(--color-3)'
+};
 
 export const Badge = ({
   children,
@@ -7,57 +17,20 @@ export const Badge = ({
   size = 'md', // 'sm' | 'md'
   icon: Icon,
   pulsing = false,
-  className = '',
-  style = {}
+  className = ''
 }) => {
-  const getColors = () => {
-    switch (variant) {
-      case 'healthy':
-        return { bg: 'var(--status-healthy-bg)', text: 'var(--status-healthy)', border: 'var(--status-healthy-border)' };
-      case 'overloaded':
-        return { bg: 'var(--status-overloaded-bg)', text: 'var(--status-overloaded)', border: 'var(--status-overloaded-border)' };
-      case 'degraded':
-        return { bg: 'var(--status-degraded-bg)', text: 'var(--status-degraded)', border: 'var(--status-degraded-border)' };
-      case 'critical':
-        return { bg: 'var(--status-critical-bg)', text: 'var(--status-critical)', border: 'var(--status-critical-border)' };
-      case 'disabled':
-        return { bg: 'var(--status-disabled-bg)', text: 'var(--status-disabled)', border: 'var(--status-disabled-border)' };
-      case 'orange':
-        return { bg: 'var(--primary-orange-soft)', text: 'var(--primary-orange-dark)', border: 'var(--primary-orange-soft)' };
-      case 'info':
-        return { bg: 'var(--status-info-bg)', text: 'var(--status-info)', border: 'var(--status-info-border)' };
-      case 'dark':
-        return { bg: '#1E2337', text: '#FFFFFF', border: '#2A3047' };
-      default:
-        return { bg: 'var(--bg-surface-warm)', text: 'var(--text-body)', border: 'var(--border-warm)' };
-    }
-  };
-
-  const colors = getColors();
+  const variantClass = VARIANT_STYLES[variant] || VARIANT_STYLES.default;
+  const sizeClass = size === 'sm' ? 'px-1.5 py-0.5 text-xs gap-1' : 'px-2 py-0.5 text-xs gap-1.5';
 
   return (
     <span
-      className={`badge-pill ${pulsing ? 'animate-pulse-slow' : ''} ${className}`}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '6px',
-        background: colors.bg,
-        color: colors.text,
-        border: `1px solid ${colors.border}`,
-        borderRadius: 'var(--radius-full)',
-        padding: size === 'sm' ? '2px 8px' : '4px 12px',
-        fontSize: size === 'sm' ? '11px' : '12px',
-        fontWeight: '600',
-        lineHeight: 1.2,
-        letterSpacing: '0.01em',
-        whiteSpace: 'nowrap',
-        ...style
-      }}
+      className={`rounded-full border whitespace-nowrap ${variantClass} ${sizeClass}`}
     >
       {Icon && <Icon size={size === 'sm' ? 12 : 14} />}
-      {count !== undefined && <span style={{ fontWeight: '700' }}>{count}</span>}
+      {count !== undefined && <span>{count}</span>}
       <span>{children}</span>
     </span>
   );
 };
+
+export default Badge;
