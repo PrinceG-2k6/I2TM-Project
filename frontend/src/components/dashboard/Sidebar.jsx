@@ -5,9 +5,6 @@ import {
   LayoutDashboard,
   AlertTriangle,
   Camera,
-  Settings,
-  Sliders,
-  Layers,
   ShieldCheck,
   Clock,
   ArrowLeft,
@@ -22,7 +19,8 @@ import { useTraffic } from '../../context/TrafficContext';
 export const Sidebar = ({ activeTab = 'dashboard', onSelectTab, onNavigateLanding }) => {
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const { emergency, triggerEmergencyCorridor, resetEmergencyCorridor } = useTraffic();
+  const { activeCorridors, removeEmergencyCorridor } = useTraffic();
+  const emergency = activeCorridors && activeCorridors.length > 0 ? activeCorridors[0] : { active: false };
 
   const handleSelectTab = (tabId) => {
     if (onSelectTab) {
@@ -44,12 +42,9 @@ export const Sidebar = ({ activeTab = 'dashboard', onSelectTab, onNavigateLandin
     { id: 'dashboard', label: 'Dashboard Map', icon: LayoutDashboard, badge: 'Live' },
     { id: 'junctions', label: 'Junctions', icon: GitFork, badge: '10' },
     { id: 'cameras', label: 'Cameras & Signals', icon: Camera, badge: 'Live' },
-    { id: 'fyis', label: 'FYIs', icon: AlertTriangle, badge: '10', badgeVariant: 'warning' },
-    { id: 'features', label: 'Features', icon: Sliders },
-    { id: 'services', label: 'Services', icon: Layers },
-    { id: 'guards', label: 'Guards', icon: ShieldCheck },
-    { id: 'timeline', label: 'Timeline', icon: Clock },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'incidents', label: 'Incidents Feed', icon: Radio, badge: 'Live', badgeVariant: 'warning' },
+    { id: 'green-corridors', label: 'Green Corridors', icon: Siren },
+    { id: 'timeline', label: 'Timeline', icon: Clock }
   ];
 
   return (
@@ -113,61 +108,6 @@ export const Sidebar = ({ activeTab = 'dashboard', onSelectTab, onNavigateLandin
           <span>← Back to Landing</span>
         </button>
 
-        {/* Top Emergency Green Corridor Simulation & Reset Button */}
-        <div style={{ marginBottom: '16px' }}>
-          {emergency.active ? (
-            <button
-              onClick={resetEmergencyCorridor}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: '8px',
-                backgroundColor: '#7F1D1D',
-                border: '2px solid #EF4444',
-                color: '#FFFFFF',
-                fontSize: '12px',
-                fontWeight: '800',
-                cursor: 'pointer',
-                boxShadow: '0 0 12px rgba(239, 68, 68, 0.4)',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              <RotateCcw size={14} className="animate-pulse-slow" />
-              <span>Reset Corridor ({emergency.countdownSeconds}s)</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                triggerEmergencyCorridor('CRITICAL');
-                handleSelectTab('guards');
-              }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: '8px',
-                backgroundColor: '#FF5A43',
-                border: '1px solid #FF8170',
-                color: '#FFFFFF',
-                fontSize: '12px',
-                fontWeight: '800',
-                cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(255, 90, 67, 0.35)',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              <Siren size={15} />
-              <span>Simulate Green Corridor</span>
-            </button>
-          )}
-        </div>
 
         {/* Navigation items */}
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

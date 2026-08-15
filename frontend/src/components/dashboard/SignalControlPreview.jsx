@@ -4,7 +4,8 @@ import { useTraffic } from '../../context/TrafficContext';
 import { Badge } from '../common/Badge';
 
 export const SignalControlPreview = () => {
-  const { approaches, emergency } = useTraffic();
+  const { approaches, activeCorridors } = useTraffic();
+  const emergency = activeCorridors && activeCorridors.length > 0 ? activeCorridors[0] : { active: false };
 
   return (
     <div

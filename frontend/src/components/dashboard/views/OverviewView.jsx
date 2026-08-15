@@ -2,14 +2,12 @@ import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { useJsApiLoader, GoogleMap, MarkerF, PolygonF, Polyline, DirectionsRenderer, InfoWindow } from '@react-google-maps/api';
 import { useTraffic, INDIAN_CITIES } from '../../../context/TrafficContext';
 import { Badge } from '../../common/Badge';
-import { Button } from '../../common/Button';
 import { Dropdown } from '../../common/Dropdown';
 import {
   Camera,
   Siren,
   RotateCcw,
   Zap,
-  ArrowRight,
   Filter
 } from 'lucide-react';
 
@@ -113,14 +111,13 @@ const MAP_OPTIONS = {
   ]
 };
 
-export const OverviewView = ({ onNavigateTab }) => {
+export const OverviewView = () => {
   const {
     activeCity,
     cityCenter,
     approaches,
-    emergency,
-    triggerEmergencyCorridor,
-    resetEmergencyCorridor,
+    activeCorridors,
+    removeEmergencyCorridor,
     selectedJunction,
     setSelectedJunction,
     showCameras,
@@ -129,9 +126,8 @@ export const OverviewView = ({ onNavigateTab }) => {
     setShowSignals,
     showCorridor,
     setShowCorridor,
-    filters,
-    setFilters,
-    clearAllFilters
+    clearAllFilters,
+    alerts
   } = useTraffic();
 
   const [selectedElement, setSelectedElement] = useState(null);
@@ -146,6 +142,9 @@ export const OverviewView = ({ onNavigateTab }) => {
   const onUnmountMap = useCallback(() => {
     mapRef.current = null;
   }, []);
+
+  // Use the first active corridor for dashboard display if any exist
+  const emergency = activeCorridors && activeCorridors.length > 0 ? activeCorridors[0] : { active: false };
 
   // Smoothly animate pan & zoom when user switches or searches a city
   useEffect(() => {
@@ -403,38 +402,8 @@ export const OverviewView = ({ onNavigateTab }) => {
     let isMounted = true;
 
     const fetchRoute = async () => {
-      // 1. Try Google Maps DirectionsService
-      if (window.google && window.google.maps) {
-        try {
-          const service = new window.google.maps.DirectionsService();
-          service.route(
-            {
-              origin: ambulancePos,
-              destination: destinationPos,
-              travelMode: window.google.maps.TravelMode.DRIVING
-            },
-            (result, status) => {
-              if (status === window.google.maps.DirectionsStatus.OK && result.routes && result.routes[0]) {
-                const points = result.routes[0].overview_path.map((p) => ({
-                  lat: p.lat(),
-                  lng: p.lng()
-                }));
-                if (isMounted && points.length > 0) {
-                  setRoadPathPoints(points);
-                  return;
-                }
-              }
-              // Fallback to OSRM real road engine
-              fetchOSRM();
-            }
-          );
-          return;
-        } catch (err) {
-          console.warn('Google DirectionsService failed, falling back to OSRM:', err);
-        }
-      }
-
-      // 2. OSRM Driving Route Engine (guaranteed 100% real road geometry)
+      // Use OSRM Driving Route Engine (guaranteed 100% real road geometry)
+      // Bypassing Google DirectionsService to avoid legacy API REQUEST_DENIED errors.
       fetchOSRM();
     };
 
@@ -551,7 +520,7 @@ export const OverviewView = ({ onNavigateTab }) => {
         );
       })}
 
-      {/* 3. Green Corridor Emergency Path & Markers (Real Street Driving Polyline Only) */}
+      {/* 3. Green Corridor Emergency Path & Markers (Real Street Driving Polyline) */}
       {showCorridor && roadPathPoints.length > 0 && (
         <>
           {/* Single Real Street Driving Polyline */}
@@ -691,23 +660,150 @@ export const OverviewView = ({ onNavigateTab }) => {
             </div>
           </div>
 
-          <button
-            onClick={resetEmergencyCorridor}
-            style={{
-              padding: '6px 12px',
-              backgroundColor: '#FEF2F2',
-              color: '#991B1B',
-              border: 'none',
-              borderRadius: 'var(--radius-sm)',
-              fontWeight: '800',
-              fontSize: '12px',
-              cursor: 'pointer'
-            }}
-          >
-            Reset Path ({emergency.countdownSeconds}s)
-          </button>
+
         </div>
       )}
+
+      {/* 2. Network Stats Bar */}
+      {(() => {
+        const appArr = Object.values(approaches || {});
+        const avgDensity = appArr.length
+          ? Math.round(appArr.reduce((s, a) => s + (a.densityPct || 0), 0) / appArr.length)
+          : 77;
+        const networkRisk = Math.min(100, Math.round(avgDensity * 0.68 + (emergency?.active ? 12 : 0)));
+        const highRiskCount = appArr.filter((a) => (a.densityPct || 0) >= 75).length;
+        const activeIncidents = alerts?.length || 6;
+        const emergencyUnits = emergency?.active ? 3 : 1;
+        const ambulancesEnRoute = emergency?.active ? 1 : 0;
+        const coveragePct = 50;
+
+        const stats = [
+          {
+            id: 'network-risk',
+            label: 'Network Risk',
+            value: networkRisk,
+            max: 100,
+            unit: '/100',
+            sub: 'Weighted across 16 junctions',
+            color: networkRisk >= 70 ? '#DC2626' : networkRisk >= 50 ? '#F59E0B' : '#16A34A',
+            bg: networkRisk >= 70 ? '#FEF2F2' : networkRisk >= 50 ? '#FFFBEB' : '#F0FDF4',
+            border: networkRisk >= 70 ? '#FCA5A5' : networkRisk >= 50 ? '#FCD34D' : '#86EFAC',
+            isScore: true
+          },
+          {
+            id: 'avg-congestion',
+            label: 'Avg Congestion',
+            value: avgDensity,
+            max: 100,
+            unit: '/100',
+            sub: 'Across active approaches',
+            color: avgDensity >= 80 ? '#DC2626' : avgDensity >= 60 ? '#F59E0B' : '#16A34A',
+            bg: avgDensity >= 80 ? '#FEF2F2' : avgDensity >= 60 ? '#FFFBEB' : '#F0FDF4',
+            border: avgDensity >= 80 ? '#FCA5A5' : avgDensity >= 60 ? '#FCD34D' : '#86EFAC',
+            isScore: true
+          },
+          {
+            id: 'high-risk-junctions',
+            label: 'High-Risk Junctions',
+            value: highRiskCount,
+            unit: '',
+            sub: 'Density \u2265 75% threshold',
+            color: '#EA580C',
+            bg: '#FFF7ED',
+            border: '#FDBA74',
+            isScore: false
+          },
+          {
+            id: 'active-incidents',
+            label: 'Active Incidents',
+            value: activeIncidents,
+            unit: '',
+            sub: 'Open in alert stream',
+            color: '#7C3AED',
+            bg: '#F5F3FF',
+            border: '#C4B5FD',
+            isScore: false
+          },
+          {
+            id: 'emergency-units',
+            label: 'Emergency Units',
+            value: emergencyUnits,
+            unit: '',
+            sub: emergency?.active ? '\uD83D\uDEA8 Corridor active' : 'On standby',
+            color: '#DC2626',
+            bg: emergency?.active ? '#FEF2F2' : '#F8FAFC',
+            border: emergency?.active ? '#F87171' : '#E2E8F0',
+            isScore: false,
+            pulse: emergency?.active
+          },
+          {
+            id: 'ambulances-en-route',
+            label: 'Ambulances En Route',
+            value: ambulancesEnRoute,
+            unit: '',
+            sub: emergency?.active ? (emergency.vehicleId || 'DL-01-AMB-889') : 'No dispatch active',
+            color: '#0284C7',
+            bg: '#F0F9FF',
+            border: '#7DD3FC',
+            isScore: false
+          },
+          {
+            id: 'junction-coverage',
+            label: 'Junction Coverage',
+            value: coveragePct,
+            max: 100,
+            unit: '%',
+            sub: '16 nodes monitored',
+            color: '#16A34A',
+            bg: '#F0FDF4',
+            border: '#86EFAC',
+            isScore: true
+          }
+        ];
+
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '10px' }}>
+            {stats.map((s) => (
+              <div
+                key={s.id}
+                style={{
+                  backgroundColor: s.bg,
+                  border: `1px solid ${s.border}`,
+                  borderRadius: '12px',
+                  padding: '14px 12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', backgroundColor: s.color, borderRadius: '12px 12px 0 0' }} />
+                <div style={{ fontSize: '10px', fontWeight: '800', color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase', lineHeight: 1.3 }}>
+                  {s.label}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '2px' }}>
+                  <span
+                    style={{ fontSize: '28px', fontWeight: '900', color: s.color, fontFamily: 'Outfit, sans-serif', lineHeight: 1, letterSpacing: '-0.02em' }}
+                    className={s.pulse ? 'animate-pulse-slow' : ''}
+                  >
+                    {s.value}
+                  </span>
+                  {s.unit && (
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#94A3B8' }}>{s.unit}</span>
+                  )}
+                </div>
+                {s.isScore && (
+                  <div style={{ height: '4px', backgroundColor: '#E2E8F0', borderRadius: '9999px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${Math.min((s.value / s.max) * 100, 100)}%`, backgroundColor: s.color, borderRadius: '9999px', transition: 'width 0.6s ease' }} />
+                  </div>
+                )}
+                <div style={{ fontSize: '10px', color: '#94A3B8', fontWeight: '500', lineHeight: 1.3 }}>{s.sub}</div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* 3. Main Map Container & Permanent Side Filter Panel */}
       <div style={{ display: 'flex', gap: '16px', width: '100%', alignItems: 'stretch' }}>
@@ -885,7 +981,7 @@ export const OverviewView = ({ onNavigateTab }) => {
                     Green Corridor Path
                   </div>
                   <div style={{ fontSize: '10px', color: '#64748B' }}>
-                    {emergency?.active ? 'Corridor Active' : 'Emergency Trajectory'}
+                    {emergency?.active ? '🚨 Corridor Active' : 'Emergency Route Layer'}
                   </div>
                 </div>
               </div>
@@ -912,87 +1008,10 @@ export const OverviewView = ({ onNavigateTab }) => {
               onChange={(val) => setSelectedJunction && setSelectedJunction(val)}
             />
 
-            {/* Users / Role Filter */}
-            <Dropdown
-              label="Users (Author / Role)"
-              options={[
-                { value: 'All users', label: 'All users' },
-                { value: 'Rob Ocel', label: 'Rob Ocel (Operator)' },
-                { value: 'Toby', label: 'Toby (Vision ML)' },
-                { value: 'System', label: 'System (AI Optimizer)' }
-              ]}
-              value={filters?.userRole || 'All users'}
-              onChange={(val) => setFilters && setFilters({ ...filters, userRole: val })}
-            />
-
-            {/* Features Filter */}
-            <Dropdown
-              label="Features"
-              options={[
-                { value: 'All features', label: 'All features' },
-                { value: 'Internal Reports', label: 'Internal Reports' },
-                { value: 'Lane Cut AI', label: 'Lane Cut Guard' },
-                { value: 'Green Corridor Dispatch', label: 'Green Corridor Dispatch' }
-              ]}
-              value={filters?.feature || 'All features'}
-              onChange={(val) => setFilters && setFilters({ ...filters, feature: val })}
-            />
-
-            {/* AI Services Filter */}
-            <Dropdown
-              label="AI Services"
-              options={[
-                { value: 'All service', label: 'All service' },
-                { value: 'Vision Density Detector', label: 'Vision Density Detector' },
-                { value: 'Emergency Triage Engine', label: 'Emergency Triage Engine' },
-                { value: 'Dynamic Signal Optimizer', label: 'Dynamic Signal Optimizer' }
-              ]}
-              value={filters?.aiService || 'All service'}
-              onChange={(val) => setFilters && setFilters({ ...filters, aiService: val })}
-            />
-
-            {/* Filter by Tags */}
-            <Dropdown
-              label="Filter by Tags"
-              options={[
-                { value: 'System', label: 'System' },
-                { value: 'Feature', label: 'Feature' },
-                { value: 'Emergency', label: 'Emergency' },
-                { value: 'Admin Dashboard', label: 'Admin Dashboard' }
-              ]}
-              value={filters?.tag || ''}
-              onChange={(val) => setFilters && setFilters({ ...filters, tag: val })}
-            />
-          </div>
-
-          {/* Section 3: Action Controls */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', borderTop: '1px solid #F1F5F9', paddingTop: '14px' }}>
-            <Button
-              variant={emergency?.active ? 'danger' : 'primary'}
-              size="md"
-              icon={Siren}
-              onClick={emergency?.active ? resetEmergencyCorridor : () => {
-                setShowCorridor(true);
-                triggerEmergencyCorridor('CRITICAL');
-              }}
-              style={{ width: '100%' }}
-            >
-              {emergency?.active ? `Reset Path (${emergency.countdownSeconds}s)` : 'Simulate Emergency Path'}
-            </Button>
-
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={ArrowRight}
-              iconPosition="right"
-              onClick={() => onNavigateTab && onNavigateTab('junctions')}
-              style={{ width: '100%' }}
-            >
-              View Junctions Page
-            </Button>
           </div>
         </div>
       </div>
+
     </div>
   );
 };

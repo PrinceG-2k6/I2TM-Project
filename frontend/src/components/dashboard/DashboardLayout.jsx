@@ -6,15 +6,12 @@ import { Topbar } from './Topbar';
 // Section Views
 import { OverviewView } from './views/OverviewView';
 import { JunctionsView } from './views/JunctionsView';
-import { FYIsView } from './views/FYIsView';
+import { IncidentsView } from './views/IncidentsView';
 import { CamerasSignalsView } from './views/CamerasSignalsView';
-import { FeaturesView } from './views/FeaturesView';
-import { GuardsView } from './views/GuardsView';
-import { ServicesView } from './views/ServicesView';
+import { GreenCorridorsView } from './views/GreenCorridorsView';
 import { TimelineView } from './views/TimelineView';
-import { SettingsView } from './views/SettingsView';
 
-const VALID_TABS = ['dashboard', 'junctions', 'cameras', 'fyis', 'features', 'guards', 'services', 'timeline', 'settings'];
+const VALID_TABS = ['dashboard', 'junctions', 'cameras', 'incidents', 'green-corridors', 'timeline'];
 
 export const DashboardLayout = () => {
   const { tab } = useParams();
@@ -86,25 +83,19 @@ export const DashboardLayout = () => {
   const renderActiveView = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <OverviewView onNavigateTab={(t) => handleSelectTab(t)} />;
+        return <OverviewView />;
       case 'junctions':
         return <JunctionsView onNavigateTab={(t) => handleSelectTab(t)} />;
       case 'cameras':
         return <CamerasSignalsView />;
-      case 'fyis':
-        return <FYIsView />;
-      case 'features':
-        return <FeaturesView />;
-      case 'guards':
-        return <GuardsView />;
-      case 'services':
-        return <ServicesView />;
+      case 'incidents':
+        return <IncidentsView />;
+      case 'green-corridors':
+        return <GreenCorridorsView />;
       case 'timeline':
         return <TimelineView />;
-      case 'settings':
-        return <SettingsView />;
       default:
-        return <OverviewView onNavigateTab={(t) => handleSelectTab(t)} />;
+        return <OverviewView />;
     }
   };
 

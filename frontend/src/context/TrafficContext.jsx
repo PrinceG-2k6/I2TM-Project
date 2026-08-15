@@ -276,26 +276,35 @@ export const TrafficProvider = ({ children }) => {
     setSelectedJunction(junctionName);
   };
 
-  // Emergency & Green Corridor Triage State
-  const [emergency, setEmergency] = useState({
-    active: false,
-    vehicleType: 'AMBULANCE',
-    vehicleLabel: 'Ambulance',
-    vehicleIcon: '🚑',
-    ambulanceId: 'DL-01-AMB-889',
-    vehicleId: 'DL-01-AMB-889',
-    patientSeverity: 'CRITICAL',
-    triageLevel: 'RED',
-    etaSeconds: 90,
-    countdownSeconds: 90,
-    hospital: 'Trauma Emergency Hub',
-    destination: 'Trauma Emergency Hub',
-    origin: 'Outer Ring Corridor',
-    distanceMeters: 850,
-    routeCongestionPct: 88.0,
-    roadsideMessage: 'Ambulance approaching. Keep left lane clear.',
-    targetApproach: 'East Commercial Arterial'
-  });
+  // Emergency & Green Corridor Triage State (Array for multiple corridors)
+  const [activeCorridors, setActiveCorridors] = useState([
+    {
+      id: `CORR-INIT89`,
+      active: true,
+      status: 'IN_TRANSIT',
+      vehicleType: 'AMBULANCE',
+      vehicleLabel: 'Ambulance',
+      vehicleIcon: 'Siren',
+      vehicleId: 'DL-01-AMB-889',
+      patientSeverity: 'CRITICAL',
+      triageLevel: 'RED',
+      etaSeconds: 120,
+      countdownSeconds: 95, // Already in progress
+      destination: `Local Trauma Center`,
+      origin: `Outer Ring Corridor`,
+      distanceMeters: 850,
+      routeCongestionPct: 88.0,
+      roadsideMessage: `Ambulance approaching. Keep left lane clear.`,
+      targetApproach: 'East Commercial Arterial',
+      pathNodes: [
+        { name: 'Outer Ring Entry', status: 'PASSED', isGreen: true },
+        { name: 'Commercial Arterial', status: 'ACTIVE', isGreen: true },
+        { name: 'City Center Node', status: 'UPCOMING', isGreen: true },
+        { name: 'Hospital Approach', status: 'UPCOMING', isGreen: true }
+      ],
+      progressPct: 20
+    }
+  ]);
 
   // Master Alert List
   const [alerts, setAlerts] = useState([
@@ -337,6 +346,45 @@ export const TrafficProvider = ({ children }) => {
       feature: 'Signal Timing Engine',
       service: 'Dynamic Signal Optimizer',
       tags: ['System', 'Optimization']
+    },
+    {
+      id: 'ALT-104',
+      time: '14:15:30',
+      title: 'Wrong-way vehicle detected on North Approach flyover.',
+      description: 'AI camera flagged vehicle travelling against traffic flow at 42 km/h. Alert relayed to traffic marshal unit.',
+      severity: 'CRITICAL',
+      type: 'RISKY_MOVEMENT',
+      author: 'Toby',
+      role: 'Vision ML',
+      feature: 'Wrong-Way Guard',
+      service: 'Vision Trajectory Interceptor',
+      tags: ['Vision AI', 'Security', 'Critical']
+    },
+    {
+      id: 'ALT-105',
+      time: '14:11:58',
+      title: 'VMS Roadside Display Board updated with congestion advisory.',
+      description: 'Board J-04 (Ring Road South) now showing: "Heavy congestion ahead. Use alternate route via West Feeder."',
+      severity: 'HEALTHY',
+      type: 'SIGNAL',
+      author: 'AI Dispatch',
+      role: 'System',
+      feature: 'Roadside Display Board',
+      service: 'Dynamic Signal Optimizer',
+      tags: ['System', 'VMS']
+    },
+    {
+      id: 'ALT-106',
+      time: '14:08:22',
+      title: 'Signal override applied: West Residential Feeder green extended.',
+      description: 'Adaptive control extended green phase by +18s on West approach to balance queue buildup detected by camera array.',
+      severity: 'WARNING',
+      type: 'SIGNAL',
+      author: 'System',
+      role: 'System',
+      feature: 'Signal Timing Engine',
+      service: 'Dynamic Signal Optimizer',
+      tags: ['System', 'Optimization', 'Signal']
     }
   ]);
 
@@ -377,23 +425,25 @@ export const TrafficProvider = ({ children }) => {
     if (!isLiveSimulating) return;
 
     const interval = setInterval(() => {
-      // Countdown for emergency
-      setEmergency((prev) => {
-        if (!prev.active || prev.countdownSeconds <= 0) return prev;
-        const nextSec = prev.countdownSeconds - 1;
-        if (nextSec === 0) {
+      // Countdown for all active corridors
+      setActiveCorridors((prev) => {
+        if (prev.length === 0) return prev;
+        
+        return prev.map(corridor => {
+          if (corridor.countdownSeconds <= 0) {
+            return {
+              ...corridor,
+              countdownSeconds: 0,
+              status: 'ARRIVED',
+              roadsideMessage: `${corridor.vehicleLabel} arrived at destination.`
+            };
+          }
           return {
-            ...prev,
-            active: false,
-            countdownSeconds: 0,
-            roadsideMessage: `${prev.vehicleLabel || 'Emergency vehicle'} cleared. Adaptive signal flow resumed.`
+            ...corridor,
+            countdownSeconds: corridor.countdownSeconds - 1,
+            roadsideMessage: `${corridor.vehicleLabel} approaching. Keep left lane clear.`
           };
-        }
-        return {
-          ...prev,
-          countdownSeconds: nextSec,
-          roadsideMessage: `${prev.vehicleLabel || 'Emergency vehicle'} approaching. Keep left lane clear.`
-        };
+        });
       });
 
       // Realistic jitter for approaches
@@ -417,29 +467,40 @@ export const TrafficProvider = ({ children }) => {
 
   // Trigger Emergency Corridor
   const triggerEmergencyCorridor = (severity = 'CRITICAL', vehicleType = 'AMBULANCE') => {
-    const countdown = severity === 'CRITICAL' ? 90 : severity === 'SERIOUS' ? 60 : 30;
+    const countdown = severity === 'CRITICAL' ? 120 : severity === 'SERIOUS' ? 90 : 60;
     const triage = severity === 'CRITICAL' ? 'RED' : severity === 'SERIOUS' ? 'YELLOW' : 'GREEN';
     const preset = EMERGENCY_PRESETS[vehicleType] || EMERGENCY_PRESETS.AMBULANCE;
 
-    setEmergency({
+    // Build a unique ID and full route path with signals for the visualizer
+    const newCorridor = {
+      id: `CORR-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
       active: true,
+      status: 'IN_TRANSIT',
       vehicleType: preset.vehicleType,
       vehicleLabel: preset.vehicleLabel,
       vehicleIcon: preset.vehicleIcon,
-      ambulanceId: preset.vehicleId,
       vehicleId: preset.vehicleId,
       patientSeverity: severity,
       triageLevel: triage,
       etaSeconds: countdown,
       countdownSeconds: countdown,
-      hospital: `${activeCity?.name || 'Local'} Trauma Center`,
       destination: `${activeCity?.name || 'Local'} Trauma Center`,
       origin: `${activeCity?.name || 'Local'} Outer Ring`,
       distanceMeters: preset.distanceMeters,
       routeCongestionPct: 88.0,
       roadsideMessage: `${preset.vehicleLabel} approaching. Keep left lane clear.`,
-      targetApproach: 'East Commercial Arterial'
-    });
+      targetApproach: 'East Commercial Arterial',
+      // Mock path data for tracking
+      pathNodes: [
+        { name: 'Outer Ring Entry', status: 'PASSED', isGreen: true },
+        { name: 'Commercial Arterial', status: 'ACTIVE', isGreen: true },
+        { name: 'City Center Node', status: 'UPCOMING', isGreen: true },
+        { name: 'Hospital Approach', status: 'UPCOMING', isGreen: true }
+      ],
+      progressPct: 15
+    };
+
+    setActiveCorridors(prev => [newCorridor, ...prev]);
 
     setApproaches((prev) => ({
       North: { ...prev.North, currentLight: 'RED' },
@@ -449,13 +510,8 @@ export const TrafficProvider = ({ children }) => {
     }));
   };
 
-  const resetEmergencyCorridor = () => {
-    setEmergency((prev) => ({
-      ...prev,
-      active: false,
-      countdownSeconds: 0,
-      roadsideMessage: 'Adaptive Signal Active. Normal traffic flow maintained.'
-    }));
+  const removeEmergencyCorridor = (corridorId) => {
+    setActiveCorridors(prev => prev.filter(c => c.id !== corridorId));
   };
 
   const applySuggestion = (suggestionId) => {
@@ -501,9 +557,9 @@ export const TrafficProvider = ({ children }) => {
         setIsLiveSimulating,
         approaches,
         setApproaches,
-        emergency,
+        activeCorridors,
         triggerEmergencyCorridor,
-        resetEmergencyCorridor,
+        removeEmergencyCorridor,
         alerts,
         setAlerts,
         suggestions,

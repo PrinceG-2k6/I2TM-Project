@@ -5,7 +5,8 @@ import { useTraffic } from '../../context/TrafficContext';
 
 export const AccidentHazardBanner = ({ onNavigateGuards }) => {
   const navigate = useNavigate();
-  const { emergency, triggerEmergencyCorridor, resetEmergencyCorridor } = useTraffic();
+  const { activeCorridors, triggerEmergencyCorridor, removeEmergencyCorridor } = useTraffic();
+  const emergency = activeCorridors && activeCorridors.length > 0 ? activeCorridors[0] : { active: false };
 
   const handleInspectGuards = () => {
     if (onNavigateGuards) {
@@ -124,53 +125,6 @@ export const AccidentHazardBanner = ({ onNavigateGuards }) => {
           <span>Inspect Triage Guard</span>
           <ArrowRight size={14} color="#DC2626" />
         </button>
-
-        {emergency.active ? (
-          <button
-            onClick={resetEmergencyCorridor}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 16px',
-              backgroundColor: '#FEF2F2',
-              color: '#991B1B',
-              fontWeight: '800',
-              fontSize: '13px',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid #FCA5A5',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
-            }}
-          >
-            <RotateCcw size={15} color="#991B1B" />
-            <span>Reset Corridor ({emergency.countdownSeconds}s)</span>
-          </button>
-        ) : (
-          <button
-            onClick={() => {
-              triggerEmergencyCorridor('CRITICAL');
-              handleInspectGuards();
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 16px',
-              backgroundColor: '#DC2626',
-              color: '#FFFFFF',
-              fontWeight: '800',
-              fontSize: '13px',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid #F87171',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(220, 38, 38, 0.5)'
-            }}
-          >
-            <Siren size={16} />
-            <span>Simulate Green Corridor</span>
-          </button>
-        )}
       </div>
     </div>
   );

@@ -16,7 +16,8 @@ export const Topbar = ({
     detectUserLocation,
     isDetectingLocation,
     userLocationDetected,
-    emergency,
+    activeCorridors,
+    triggerEmergencyCorridor,
     isLiveSimulating,
     setIsLiveSimulating,
     activeFilterCount
@@ -38,6 +39,8 @@ export const Topbar = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const emergency = activeCorridors && activeCorridors.length > 0 ? activeCorridors[0] : { active: false };
 
   // Filtered Cities list based on input query
   const filteredCities = INDIAN_CITIES.filter((c) =>
