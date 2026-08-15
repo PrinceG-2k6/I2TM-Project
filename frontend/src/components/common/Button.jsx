@@ -20,7 +20,7 @@ export const Button = ({
     let border = '1px solid transparent';
     let padding = '8px 16px';
     let fontSize = '14px';
-    let fontWeight = '600';
+    let fontWeight = '400';
     let borderRadius = 'var(--radius-md)';
 
     if (size === 'sm') {

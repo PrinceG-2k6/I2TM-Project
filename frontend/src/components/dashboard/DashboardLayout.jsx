@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
-
+import Infobar from './Infobar'
 // Section Views
 import { OverviewView } from './views/OverviewView';
 import { JunctionsView } from './views/JunctionsView';
@@ -100,45 +100,28 @@ export const DashboardLayout = () => {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        width: '100vw',
-        height: '100vh',
-        overflow: 'hidden',
-        backgroundColor: '#F8FAFC'
-      }}
-    >
-      {/* 1. Left Sidebar Navigation */}
-      <Sidebar
-        activeTab={activeTab}
-        onSelectTab={handleSelectTab}
-        onNavigateLanding={handleNavigateLanding}
-      />
-
-      {/* 2. Main Content Canvas with Scroll Spy */}
-      <div
-        ref={scrollContainerRef}
-        onScroll={handleScroll}
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          minWidth: 0,
-          height: '100%',
-          overflowY: 'auto',
-          backgroundColor: '#F8FAFC'
-        }}
-      >
-        <Topbar
+    <div className='bg-(--color-1)'>
+      <Infobar />
+      <div className="flex w-full h-screen overflow-hidden">
+        <Sidebar
           activeTab={activeTab}
-          activeSubsection={activeSubsection}
-          hasMultipleSubsections={hasMultipleSubsections}
+          onSelectTab={handleSelectTab}
+          onNavigateLanding={handleNavigateLanding}
         />
-
-        <main style={{ width: '100%', maxWidth: '1520px', margin: '0 auto', padding: '24px 32px 60px' }}>
-          {renderActiveView()}
-        </main>
+        <div
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 flex flex-col h-full overflow-y-auto bg-(--color-4) text-(--color-1) rounded-tl-sm"
+        >
+          <Topbar
+            activeTab={activeTab}
+            activeSubsection={activeSubsection}
+            hasMultipleSubsections={hasMultipleSubsections}
+          />
+          <main className="w-full mx-auto p-4">
+            {renderActiveView()}
+          </main>
+        </div>
       </div>
     </div>
   );
