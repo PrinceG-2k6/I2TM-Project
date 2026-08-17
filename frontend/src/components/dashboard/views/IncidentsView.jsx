@@ -31,31 +31,6 @@ export const IncidentsView = () => {
   const emergency = getEmergencyFromCorridors(activeCorridors);
   const now = new Date();
 
-  const [mlData, setMlData] = React.useState({ lane: null, risk: null, vms: null });
-
-  React.useEffect(() => {
-    if (!selectedJunctionId) return;
-    const fetchMlData = async () => {
-      try {
-        const { fetchAPI } = await import('../../../utils/api');
-        
-        // We catch errors per request so one failure doesn't block the rest
-        const laneReq = fetchAPI(`/lane-correction/${selectedJunctionId}`).catch(() => null);
-        // Assuming risk pattern by junction id or default vehicle
-        const riskReq = fetchAPI(`/risk-patterns/DL-TEST-001`).catch(() => null); 
-        const vmsReq = fetchAPI(`/roadside-display/${selectedJunctionId}`).catch(() => null);
-
-        const [lane, risk, vms] = await Promise.all([laneReq, riskReq, vmsReq]);
-        setMlData({ lane, risk, vms });
-      } catch(e) {
-        console.error("Failed to fetch ML data", e);
-      }
-    };
-    fetchMlData();
-    const int = setInterval(fetchMlData, 10000); // refresh every 10s
-    return () => clearInterval(int);
-  }, [selectedJunctionId]);
-
   const feed = [...(alerts || [])];
   if (emergency.active) {
     feed.unshift({
@@ -74,37 +49,6 @@ export const IncidentsView = () => {
 
   return (
     <div className="w-full space-y-6">
-      
-      {/* Suraj ML Module Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-(--color-4) border border-(--color-3) p-4 rounded-sm">
-          <div className="text-sm font-semibold mb-2 text-orange-400">Lane Violations</div>
-          {mlData.lane ? (
-             <div className="text-xs text-(--color-2)">
-               Violation Type: {mlData.lane.violation_type}<br/>
-               Correction: {mlData.lane.correction_instruction}
-             </div>
-          ) : <div className="text-xs text-(--color-2)">No active violations</div>}
-        </div>
-        <div className="bg-(--color-4) border border-(--color-3) p-4 rounded-sm">
-          <div className="text-sm font-semibold mb-2 text-purple-400">Risk Patterns</div>
-          {mlData.risk ? (
-             <div className="text-xs text-(--color-2)">
-               Risk Score: {mlData.risk.risk_score}<br/>
-               Category: {mlData.risk.risk_category}
-             </div>
-          ) : <div className="text-xs text-(--color-2)">No high-risk patterns detected</div>}
-        </div>
-        <div className="bg-(--color-4) border border-(--color-3) p-4 rounded-sm">
-          <div className="text-sm font-semibold mb-2 text-blue-400">Roadside VMS Display</div>
-          {mlData.vms ? (
-             <div className="text-xs text-(--color-2)">
-               Message: {mlData.vms.display_message}<br/>
-               Priority: {mlData.vms.message_priority}
-             </div>
-          ) : <div className="text-xs text-(--color-2)">VMS Offline</div>}
-        </div>
-      </div>
 
       <div className="flex items-center justify-between mb-2">
         <div>Live Incident Feed</div>

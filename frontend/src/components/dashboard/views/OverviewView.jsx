@@ -2,7 +2,8 @@ import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useJsApiLoader, GoogleMap, MarkerF, PolygonF, Polyline, InfoWindow } from '@react-google-maps/api';
 import { useTraffic } from '../../../context/TrafficContext';
-import { INDIAN_CITIES, generateOverviewStats, MAP_CONTAINER_STYLE, MAP_OPTIONS, CAMERA_APPROACH_CONFIG, SIGNAL_APPROACH_CONFIG } from '../../../data/dummyData';
+import { MAP_CONTAINER_STYLE, MAP_OPTIONS } from '../../../config/theme';
+import { generateOverviewStats } from '../../../utils/stats';
 import { getEmergencyFromCorridors, getSignalHex } from '../../../utils/trafficUtils';
 import { Badge } from '../../common/Badge';
 import { Dropdown } from '../../common/Dropdown';
@@ -64,6 +65,7 @@ const calculateSectorPath = (center, radiusMeters, startAngle, endAngle, numPoin
 export const OverviewView = () => {
   const navigate = useNavigate();
   const {
+    appConfig,
     activeCity,
     cityCenter,
     approaches,

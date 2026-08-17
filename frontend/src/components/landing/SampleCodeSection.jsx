@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { ArrowDown, ArrowRight, Video, MapPin, Cpu, Server, Activity } from 'lucide-react';
 
 const useScrollReveal = (threshold = 0.15) => {
   const ref = useRef(null);
@@ -16,52 +17,7 @@ const useScrollReveal = (threshold = 0.15) => {
 
 export const SampleCodeSection = () => {
   const [headerRef, headerVisible] = useScrollReveal();
-  const [codeRef, codeVisible] = useScrollReveal(0.1);
-  const [copied, setCopied] = useState(false);
-
-  const codeSnippet = `// Adaptive Signal Intelligence - Emergency Corridor Dispatch
-async function handleEmergencyTriage(ambulance) {
-  const { patientSeverity, location, targetHospital } = ambulance;
-  
-  // 1. Predict multi-junction route congestion
-  const route = await MLService.predictRouteCongestion(
-    location, targetHospital
-  );
-  
-  // 2. Evaluate triage priority (Critical → RED, Serious → YELLOW)
-  const triage = await MLService.evaluateTriage({
-    severity: patientSeverity,
-    etaSeconds: route.estimatedSeconds
-  });
-
-  // 3. Trigger green corridor signal override & roadside LED countdown
-  if (triage.corridorActive) {
-    await SignalGrid.preClearJunctions(route.upcomingJunctions);
-    await RoadsideDisplay.broadcast({
-      message: "Ambulance approaching. Keep left lane clear.",
-      countdownSeconds: triage.suggestedWaitTime
-    });
-  }
-
-  return { status: "CORRIDOR_ACTIVE", eta: route.estimatedSeconds };
-}`;
-
-  // Syntax highlighting helper
-  const highlightCode = (code) => {
-    return code
-      .replace(/(\/\/[^\n]*)/g, '<span style="color:#6A9955">$1</span>')
-      .replace(/\b(async|function|const|await|if|return)\b/g, '<span style="color:#569CD6">$1</span>')
-      .replace(/("([^"]*)")/g, '<span style="color:#CE9178">$1</span>')
-      .replace(/\b([A-Z][a-zA-Z]+)\./g, '<span style="color:#4EC9B0">$1</span>.')
-      .replace(/\b(true|false|null)\b/g, '<span style="color:#569CD6">$1</span>');
-  };
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(codeSnippet).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
+  const [flowRef, flowVisible] = useScrollReveal(0.1);
 
   return (
     <section
@@ -80,14 +36,13 @@ async function handleEmergencyTriage(ambulance) {
           marginBottom: '48px',
           opacity: headerVisible ? 1 : 0,
           transform: headerVisible ? 'translateY(0)' : 'translateY(30px)',
-          transition: 'all 0.75s cubic-bezier(0.16, 1, 0.3, 1)',
+          transition: 'all 0.75s ease',
         }}
       >
         <span
           style={{
             fontSize: '10px',
-            fontWeight: '800',
-            color: '#F97316',
+            color: 'var(--color-6)',
             letterSpacing: '0.15em',
             textTransform: 'uppercase',
             display: 'block',
@@ -99,124 +54,147 @@ async function handleEmergencyTriage(ambulance) {
         <h2
           style={{
             fontSize: 'clamp(28px, 3.5vw, 44px)',
-            fontWeight: '900',
-            color: '#FFFFFF',
-            letterSpacing: '-0.03em',
+            color: 'var(--color-4)',
             marginBottom: '14px',
-            fontFamily: 'var(--font-heading)',
           }}
         >
-          Sample Code & Integration
+          System Data Flow
         </h2>
         <p
           style={{
             fontSize: '15px',
-            color: 'rgba(148, 163, 184, 0.8)',
-            maxWidth: '480px',
+            color: 'var(--color-3)',
+            maxWidth: '520px',
             margin: '0 auto',
             lineHeight: 1.65,
           }}
         >
-          Clean, developer-friendly APIs. Integrate ASI modules into any traffic management system.
+          End-to-end architecture from edge processing at the junction level to global orchestration in the central command center.
         </p>
       </div>
 
-      {/* Code block */}
+      {/* Flowchart */}
       <div
-        ref={codeRef}
+        ref={flowRef}
         style={{
-          position: 'relative',
-          backgroundColor: '#0d1117',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: '16px',
-          overflow: 'hidden',
-          textAlign: 'left',
-          boxShadow: '0 25px 80px rgba(0,0,0,0.6)',
-          opacity: codeVisible ? 1 : 0,
-          transform: codeVisible ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.98)',
-          transition: 'all 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.1s',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          opacity: flowVisible ? 1 : 0,
+          transform: flowVisible ? 'translateY(0)' : 'translateY(20px)',
+          transition: 'all 0.85s ease 0.1s',
+          fontFamily: 'monospace',
+          color: 'var(--color-4)',
+          maxWidth: '800px',
+          margin: '0 auto',
+          textAlign: 'left'
         }}
       >
-        {/* Editor chrome bar */}
-        <div
-          style={{
+        {/* Top Section: Edge Node */}
+        <div style={{
+          width: '100%',
+          border: '1px dashed var(--color-3)',
+          borderRadius: '4px',
+          padding: '24px',
+          backgroundColor: 'var(--color-2)',
+          position: 'relative'
+        }}>
+          <div style={{ fontSize: '14px', color: 'var(--color-6)', marginBottom: '24px' }}>
+            EDGE CAMERA NODE / SIMULATOR (Junction Level)
+          </div>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
+            {/* Left side inputs */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Video size={18} color="var(--color-4)" />
+                <span style={{ fontSize: '13px' }}>1. Capture Video Frame</span>
+                <ArrowRight size={16} color="var(--color-3)" style={{ marginLeft: 'auto' }} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <MapPin size={18} color="var(--color-4)" />
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '13px' }}>2. External GPS/Sensors</span>
+                  <span style={{ fontSize: '11px', color: 'var(--color-3)' }}>(e.g., Ambulance Lat/Lng)</span>
+                </div>
+                <ArrowRight size={16} color="var(--color-3)" style={{ marginLeft: 'auto' }} />
+              </div>
+            </div>
+
+            {/* Right side processing */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{
+                border: '1px solid var(--color-6)',
+                backgroundColor: 'var(--color-1)',
+                padding: '10px 16px',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '13px',
+                color: 'var(--color-6)'
+              }}>
+                <Cpu size={16} /> [ Local YOLO Processing ]
+              </div>
+              
+              <div style={{ height: '24px', borderLeft: '1px solid var(--color-3)', margin: '8px 0' }} />
+              
+              <div style={{
+                backgroundColor: 'var(--color-1)',
+                border: '1px solid var(--color-3)',
+                padding: '12px',
+                borderRadius: '4px',
+                width: '100%',
+                fontSize: '12px',
+                lineHeight: 1.6
+              }}>
+                <div style={{ color: 'var(--color-6)', marginBottom: '8px' }}>3. Extract Metrics:</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>• Vehicle Counts & Density</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>• Violations (Challans)</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>• Distance to GPS Ambulance</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Middle Connector */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '16px 0' }}>
+          <div style={{ height: '30px', borderLeft: '1px dashed var(--color-6)' }} />
+          <div style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '12px 18px',
-            backgroundColor: '#161b22',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {['#FF5F57', '#FEBC2E', '#28C840'].map((c) => (
-              <span
-                key={c}
-                style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: c, display: 'inline-block' }}
-              />
-            ))}
-            <span
-              style={{
-                marginLeft: '10px',
-                fontSize: '12px',
-                color: 'rgba(255,255,255,0.3)',
-                fontFamily: 'monospace',
-              }}
-            >
-              emergencyTriage.js
-            </span>
+            gap: '8px',
+            fontSize: '12px',
+            color: 'var(--color-6)',
+            backgroundColor: 'var(--color-1)',
+            padding: '6px 16px',
+            border: '1px solid var(--color-3)',
+            borderRadius: '16px',
+            marginTop: '-10px',
+            zIndex: 1
+          }}>
+            <ArrowDown size={14} /> Lightweight JSON via WebSocket/MQTT
           </div>
-
-          <button
-            onClick={handleCopy}
-            style={{
-              fontSize: '11px',
-              fontWeight: '600',
-              color: copied ? '#4ADE80' : 'rgba(255,255,255,0.4)',
-              background: 'none',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '6px',
-              padding: '4px 12px',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              letterSpacing: '0.04em',
-            }}
-            onMouseEnter={(e) => {
-              if (!copied) e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
-            }}
-            onMouseLeave={(e) => {
-              if (!copied) e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
-            }}
-          >
-            {copied ? '✓ Copied!' : 'Copy'}
-          </button>
+          <div style={{ height: '30px', borderLeft: '1px dashed var(--color-6)', marginTop: '-10px' }} />
         </div>
 
-        {/* Code content */}
-        <div style={{ padding: '24px 28px', overflowX: 'auto' }}>
-          <pre
-            style={{
-              fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
-              fontSize: '13px',
-              lineHeight: 1.75,
-              color: '#D4D4D4',
-              margin: 0,
-            }}
-            dangerouslySetInnerHTML={{ __html: highlightCode(codeSnippet) }}
-          />
+        {/* Bottom Section: Server */}
+        <div style={{
+          width: '100%',
+          border: '1px dashed var(--color-3)',
+          borderRadius: '4px',
+          padding: '24px',
+          backgroundColor: 'var(--color-2)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--color-6)', marginBottom: '16px' }}>
+            <Server size={18} /> CENTRAL BACKEND SERVER (Orchestrator)
+          </div>
+          <ul style={{ fontSize: '13px', color: 'var(--color-3)', lineHeight: 1.8, margin: 0, paddingLeft: '20px' }}>
+            <li>Receives JSON packets from all junction edge nodes</li>
+            <li>Updates Global Traffic State (City Grid Heatmap)</li>
+            <li>Pushes live alerts & streams to <strong>CONTROL PANEL DASHBOARD</strong></li>
+          </ul>
         </div>
-
-        {/* Bottom glow line */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: '1px',
-            background: 'linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.4), transparent)',
-          }}
-        />
       </div>
     </section>
   );

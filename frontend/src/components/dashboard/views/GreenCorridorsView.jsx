@@ -1,6 +1,5 @@
 import React from 'react';
 import { useTraffic } from '../../../context/TrafficContext';
-import { EMERGENCY_PRESETS } from '../../../data/dummyData';
 import { getEmergencyFromCorridors } from '../../../utils/trafficUtils';
 import { Siren, Flame, Navigation2, CheckCircle2, Clock, Map as MapIcon } from 'lucide-react';
 
@@ -9,8 +8,55 @@ const VEHICLE_ICON_MAP = {
   FIRE: Flame
 };
 
+const AmbulanceRouteInsights = ({ vehicleId }) => {
+  const [data, setData] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!vehicleId) return;
+    const fetchRouteData = async () => {
+      try {
+        const { fetchAPI } = await import('../../../utils/api');
+        const res = await fetchAPI(`/ambulance/routes/${vehicleId}`);
+        setData(res);
+      } catch(e) {
+        // silently fail if no data
+      }
+    };
+    fetchRouteData();
+    const int = setInterval(fetchRouteData, 10000);
+    return () => clearInterval(int);
+  }, [vehicleId]);
+
+  if (!data) return null;
+
+  return (
+    <div className="mt-4 pt-3 border-t border-(--color-3) flex flex-col gap-2">
+      <div className="text-xs font-semibold text-(--color-2) flex items-center gap-1.5">
+        <Navigation2 size={12} /> AI Route Analysis
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="bg-(--color-5) p-2 rounded-sm border border-(--color-3)">
+          <div className="text-(--color-2) mb-0.5">Route Risk</div>
+          <div className="font-mono">{data.risk_score ? (data.risk_score * 100).toFixed(1) : 'N/A'}%</div>
+        </div>
+        <div className="bg-(--color-5) p-2 rounded-sm border border-(--color-3)">
+          <div className="text-(--color-2) mb-0.5">Estimated ETA</div>
+          <div className="font-mono">{data.eta_minutes ? data.eta_minutes.toFixed(1) : '--'} mins</div>
+        </div>
+      </div>
+      {data.alternate_routes && data.alternate_routes.length > 0 && (
+        <div className="bg-(--color-5) p-2 rounded-sm border border-(--color-3) text-xs">
+          <div className="text-(--color-2) mb-1">Alternate Route:</div>
+          <div>{data.alternate_routes[0]}</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 export const GreenCorridorsView = () => {
-  const { activeCorridors, triggerEmergencyCorridor, removeEmergencyCorridor } = useTraffic();
+  const { activeCorridors, triggerEmergencyCorridor, removeEmergencyCorridor, appConfig } = useTraffic();
 
   return (
     <div className="space-y-6">
@@ -24,7 +70,7 @@ export const GreenCorridorsView = () => {
       {/* Dispatch bar */}
       <div className="bg-(--color-4) rounded-sm p-3 flex items-center gap-3 flex-wrap">
         <span className="text-sm text-(--color-2)">Dispatch:</span>
-        {Object.values(EMERGENCY_PRESETS).map((preset) => {
+        {appConfig && appConfig.EMERGENCY_PRESETS && Object.values(appConfig.EMERGENCY_PRESETS).map((preset) => {
           const IconComp = VEHICLE_ICON_MAP[preset.vehicleType] || Siren;
           return (
             <button
@@ -157,6 +203,11 @@ export const GreenCorridorsView = () => {
                       />
                     </div>
                   </div>
+                  
+                  {/* AI Ambulance Route Insights */}
+                  {!isArrived && corridor.vehicleId && (
+                    <AmbulanceRouteInsights vehicleId={corridor.vehicleId} />
+                  )}
                 </div>
 
                 {/* Path Nodes */}

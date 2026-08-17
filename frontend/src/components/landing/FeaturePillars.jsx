@@ -20,7 +20,6 @@ const useScrollReveal = () => {
 const PillarCard = ({ pillar, idx, onOpenDashboard }) => {
   const [ref, visible] = useScrollReveal();
   const isReversed = idx % 2 === 1;
-  const [cardHover, setCardHover] = useState(false);
 
   return (
     <div
@@ -40,10 +39,9 @@ const PillarCard = ({ pillar, idx, onOpenDashboard }) => {
         <span
           style={{
             fontSize: '10px',
-            fontWeight: '800',
-            color: '#F97316',
-            backgroundColor: 'rgba(249, 115, 22, 0.12)',
-            border: '1px solid rgba(249, 115, 22, 0.25)',
+            color: 'var(--color-6)',
+            backgroundColor: 'var(--color-2)',
+            border: '1px solid var(--color-3)',
             padding: '4px 12px',
             borderRadius: '9999px',
             letterSpacing: '0.1em',
@@ -58,11 +56,9 @@ const PillarCard = ({ pillar, idx, onOpenDashboard }) => {
         <h2
           style={{
             fontSize: 'clamp(26px, 3vw, 36px)',
-            fontWeight: '800',
             lineHeight: 1.2,
-            color: '#FFFFFF',
+            color: 'var(--color-4)',
             marginBottom: '16px',
-            fontFamily: 'var(--font-heading)',
             letterSpacing: '-0.02em',
           }}
         >
@@ -72,7 +68,7 @@ const PillarCard = ({ pillar, idx, onOpenDashboard }) => {
         <p
           style={{
             fontSize: '15px',
-            color: 'rgba(148, 163, 184, 0.9)',
+            color: 'var(--color-3)',
             lineHeight: 1.75,
             marginBottom: '28px',
           }}
@@ -88,22 +84,11 @@ const PillarCard = ({ pillar, idx, onOpenDashboard }) => {
             gap: '8px',
             padding: '11px 22px',
             fontSize: '14px',
-            fontWeight: '700',
-            color: '#FFFFFF',
-            background: 'linear-gradient(135deg, #F97316, #EA580C)',
+            color: 'var(--color-4)',
+            background: 'var(--color-6)',
             border: 'none',
             borderRadius: '9px',
             cursor: 'pointer',
-            boxShadow: '0 6px 20px rgba(249, 115, 22, 0.35)',
-            transition: 'all 0.25s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 10px 30px rgba(249, 115, 22, 0.55)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 6px 20px rgba(249, 115, 22, 0.35)';
           }}
         >
           {pillar.cta}
@@ -114,58 +99,35 @@ const PillarCard = ({ pillar, idx, onOpenDashboard }) => {
       {/* Mock UI card */}
       <div
         onClick={() => onOpenDashboard && onOpenDashboard(pillar.targetTab)}
-        onMouseEnter={() => setCardHover(true)}
-        onMouseLeave={() => setCardHover(false)}
         style={{
           order: isReversed ? 1 : 2,
-          backgroundColor: '#1a1a1a',
-          border: `1px solid ${cardHover ? 'rgba(249, 115, 22, 0.35)' : 'rgba(255,255,255,0.07)'}`,
-          borderRadius: '16px',
+          backgroundColor: 'var(--color-2)',
+          border: '1px solid var(--color-3)',
+          borderRadius: '4px',
           padding: '32px',
           cursor: 'pointer',
-          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-          transform: cardHover ? 'translateY(-4px) scale(1.01)' : 'translateY(0) scale(1)',
-          boxShadow: cardHover
-            ? '0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(249, 115, 22, 0.12)'
-            : '0 8px 30px rgba(0,0,0,0.3)',
-          backdropFilter: 'blur(10px)',
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        {/* Card glow effect */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '1px',
-            background: cardHover
-              ? 'linear-gradient(90deg, transparent, rgba(249,115,22,0.6), transparent)'
-              : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
-            transition: 'all 0.3s ease',
-          }}
-        />
-
         {pillar.mockType === 'density' && (
           <div>
-            <div style={{ fontSize: '12px', fontWeight: '700', marginBottom: '20px', color: '#94A3B8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '12px', marginBottom: '20px', color: 'var(--color-3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
               Approach Density Distribution
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { label: 'East Arterial (Critical)', pct: 92, time: '50s Green', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.2)' },
-                { label: 'North Corridor', pct: 76, time: '35s Green', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.08)', border: 'rgba(245, 158, 11, 0.2)' },
-                { label: 'West Feeder', pct: 28, time: '15s Green', color: '#22C55E', bg: 'rgba(34, 197, 94, 0.08)', border: 'rgba(34, 197, 94, 0.2)' },
+                { label: 'East Arterial (Critical)', pct: 92, time: '50s Green' },
+                { label: 'North Corridor', pct: 76, time: '35s Green' },
+                { label: 'West Feeder', pct: 28, time: '15s Green' },
               ].map((row) => (
-                <div key={row.label} style={{ padding: '12px 14px', backgroundColor: row.bg, borderRadius: '9px', border: `1px solid ${row.border}` }}>
+                <div key={row.label} style={{ padding: '12px 14px', backgroundColor: 'var(--color-1)', borderRadius: '9px', border: `1px solid var(--color-3)` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '13px', color: '#CBD5E1', fontWeight: '500' }}>{row.label}</span>
-                    <strong style={{ fontSize: '13px', color: row.color, fontWeight: '700' }}>{row.time}</strong>
+                    <span style={{ fontSize: '13px', color: 'var(--color-4)' }}>{row.label}</span>
+                    <strong style={{ fontSize: '13px', color: 'var(--color-6)' }}>{row.time}</strong>
                   </div>
-                  <div style={{ height: '4px', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ width: `${row.pct}%`, height: '100%', backgroundColor: row.color, borderRadius: '4px', transition: 'width 1s ease' }} />
+                  <div style={{ height: '4px', backgroundColor: 'var(--color-2)', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ width: `${row.pct}%`, height: '100%', backgroundColor: 'var(--color-6)', borderRadius: '4px', transition: 'width 1s ease' }} />
                   </div>
                 </div>
               ))}
@@ -180,21 +142,20 @@ const PillarCard = ({ pillar, idx, onOpenDashboard }) => {
                 width: '56px',
                 height: '56px',
                 borderRadius: '14px',
-                backgroundColor: 'rgba(220, 38, 38, 0.15)',
-                border: '1px solid rgba(220, 38, 38, 0.3)',
+                backgroundColor: 'var(--color-1)',
+                border: '1px solid var(--color-6)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 16px',
-                animation: 'sirenFlash 1.5s infinite',
               }}
             >
-              <Siren size={26} color="#DC2626" />
+              <Siren size={26} color="var(--color-6)" />
             </div>
-            <div style={{ fontSize: '16px', fontWeight: '800', color: '#FFFFFF', marginBottom: '6px', fontFamily: 'var(--font-heading)' }}>
+            <div style={{ fontSize: '16px', color: 'var(--color-4)', marginBottom: '6px' }}>
               Ambulance DL-01-AMB-889
             </div>
-            <div style={{ fontSize: '13px', color: '#94A3B8', marginBottom: '20px' }}>
+            <div style={{ fontSize: '13px', color: 'var(--color-3)', marginBottom: '20px' }}>
               Patient Severity: Critical · Route: AIIMS Corridor
             </div>
             <div
@@ -202,11 +163,10 @@ const PillarCard = ({ pillar, idx, onOpenDashboard }) => {
                 display: 'inline-flex',
                 gap: '8px',
                 padding: '8px 20px',
-                backgroundColor: 'rgba(220, 38, 38, 0.15)',
-                border: '1px solid rgba(220, 38, 38, 0.3)',
-                color: '#FCA5A5',
+                backgroundColor: 'var(--color-1)',
+                border: '1px solid var(--color-6)',
+                color: 'var(--color-6)',
                 borderRadius: '9999px',
-                fontWeight: '700',
                 fontSize: '12px',
                 letterSpacing: '0.06em',
               }}
@@ -219,28 +179,26 @@ const PillarCard = ({ pillar, idx, onOpenDashboard }) => {
         {pillar.mockType === 'roadside' && (
           <div
             style={{
-              backgroundColor: '#000000',
+              backgroundColor: 'var(--color-1)',
               padding: '24px',
               borderRadius: '12px',
-              color: '#F8FAFC',
+              color: 'var(--color-4)',
               textAlign: 'center',
-              border: '2px solid rgba(255,255,255,0.08)',
+              border: '1px solid var(--color-3)',
             }}
           >
-            <div style={{ fontSize: '10px', color: '#67E8F9', fontWeight: '800', marginBottom: '10px', letterSpacing: '0.12em' }}>
+            <div style={{ fontSize: '10px', color: 'var(--color-6)', marginBottom: '10px', letterSpacing: '0.12em' }}>
               ◉ VMS ROADSIDE BROADCAST · LIVE
             </div>
-            <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '14px', color: '#F1F5F9', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '15px', marginBottom: '14px', color: 'var(--color-4)', lineHeight: 1.4 }}>
               Ambulance approaching.<br />Keep left lane clear.
             </div>
             <div
               style={{
                 fontSize: '28px',
-                fontWeight: '900',
-                color: '#FDE047',
+                color: 'var(--color-6)',
                 fontFamily: 'monospace',
                 letterSpacing: '0.04em',
-                textShadow: '0 0 20px rgba(253, 224, 71, 0.5)',
               }}
             >
               WAIT: 90s
@@ -258,14 +216,13 @@ const PillarCard = ({ pillar, idx, onOpenDashboard }) => {
                 marginBottom: '16px',
               }}
             >
-              <span style={{ fontSize: '14px', fontWeight: '700', color: '#F1F5F9' }}>Vehicle DL-04-TC-201</span>
+              <span style={{ fontSize: '14px', color: 'var(--color-4)' }}>Vehicle DL-04-TC-201</span>
               <span
                 style={{
                   fontSize: '11px',
-                  fontWeight: '800',
-                  color: '#FCA5A5',
-                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  color: 'var(--color-6)',
+                  backgroundColor: 'var(--color-1)',
+                  border: '1px solid var(--color-6)',
                   padding: '3px 10px',
                   borderRadius: '9999px',
                   letterSpacing: '0.04em',
@@ -277,7 +234,7 @@ const PillarCard = ({ pillar, idx, onOpenDashboard }) => {
             <div
               style={{
                 height: '8px',
-                backgroundColor: 'rgba(255,255,255,0.05)',
+                backgroundColor: 'var(--color-1)',
                 borderRadius: '8px',
                 overflow: 'hidden',
                 marginBottom: '14px',
@@ -287,12 +244,12 @@ const PillarCard = ({ pillar, idx, onOpenDashboard }) => {
                 style={{
                   width: '84%',
                   height: '100%',
-                  background: 'linear-gradient(90deg, #F59E0B, #EF4444)',
+                  background: 'var(--color-6)',
                   borderRadius: '8px',
                 }}
               />
             </div>
-            <p style={{ fontSize: '13px', color: '#94A3B8', lineHeight: 1.6 }}>
+            <p style={{ fontSize: '13px', color: 'var(--color-3)', lineHeight: 1.6 }}>
               Detected 38° aggressive lane cut across 3 lanes at 58 km/h. Marshal alert logged.
             </p>
           </div>
@@ -361,14 +318,13 @@ export const FeaturePillars = ({ onOpenDashboard }) => {
           marginBottom: '80px',
           opacity: headerVisible ? 1 : 0,
           transform: headerVisible ? 'translateY(0)' : 'translateY(30px)',
-          transition: 'all 0.75s cubic-bezier(0.16, 1, 0.3, 1)',
+          transition: 'all 0.75s ease',
         }}
       >
         <span
           style={{
             fontSize: '10px',
-            fontWeight: '800',
-            color: '#F97316',
+            color: 'var(--color-6)',
             letterSpacing: '0.15em',
             textTransform: 'uppercase',
             display: 'block',
@@ -380,11 +336,9 @@ export const FeaturePillars = ({ onOpenDashboard }) => {
         <h2
           style={{
             fontSize: 'clamp(32px, 4vw, 52px)',
-            fontWeight: '900',
-            color: '#FFFFFF',
+            color: 'var(--color-4)',
             letterSpacing: '-0.03em',
             marginBottom: '16px',
-            fontFamily: 'var(--font-heading)',
             lineHeight: 1.1,
           }}
         >
@@ -393,7 +347,7 @@ export const FeaturePillars = ({ onOpenDashboard }) => {
         <p
           style={{
             fontSize: '16px',
-            color: 'rgba(148, 163, 184, 0.85)',
+            color: 'var(--color-3)',
             maxWidth: '520px',
             margin: '0 auto',
             lineHeight: 1.65,

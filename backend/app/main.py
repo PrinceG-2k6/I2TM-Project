@@ -19,6 +19,7 @@ from app.routes import (
     simulation_routes,
     suggestion_routes,
     traffic_routes,
+    config_routes,
 )
 
 
@@ -66,3 +67,4 @@ app.include_router(recommendation_routes.router, prefix=settings.api_v1_prefix)
 app.include_router(risk_pattern_routes.router, prefix=settings.api_v1_prefix)
 app.include_router(roadside_display_routes.router, prefix=settings.api_v1_prefix)
 app.include_router(equipment_routes.router, prefix=settings.api_v1_prefix)
+app.include_router(config_routes.router, prefix=settings.api_v1_prefix)

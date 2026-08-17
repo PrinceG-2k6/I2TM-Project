@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Camera, Zap, Search, Layers, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import { useTraffic } from '../../../context/TrafficContext';
-import { INDIAN_CITIES } from '../../../data/dummyData';
+
 import { getSignalHex } from '../../../utils/trafficUtils';
 import { Dropdown } from '../../common/Dropdown';
 
@@ -192,22 +192,6 @@ export const CamerasSignalsView = () => {
               placeholder="Filter by Junction"
             />
           </div>
-          <button
-            onClick={async () => {
-              if (!selectedJunctionId) return alert("Please wait for junctions to load");
-              try {
-                const { fetchAPI } = await import('../../../utils/api');
-                alert("Generating Signal Optimization using AI...");
-                const res = await fetchAPI(`/traffic/recommendations/${selectedJunctionId}`, { method: 'POST' });
-                alert("AI Recommendation: " + JSON.stringify(res.recommended_timings));
-              } catch(e) {
-                alert("Failed to optimize: " + e.message);
-              }
-            }}
-            className="flex items-center gap-2 py-1.5 px-3 rounded-sm bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer transition-colors text-sm"
-          >
-            <Zap size={14} /> Generate AI Signal Optimization
-          </button>
         </div>
       </div>
 

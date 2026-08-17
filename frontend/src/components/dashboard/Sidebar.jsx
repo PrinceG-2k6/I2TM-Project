@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GitFork, LayoutDashboard, Camera, Clock, ArrowLeft, ChevronUp, Radio, Siren } from 'lucide-react';
+import { GitFork, LayoutDashboard, Camera, Clock, ArrowLeft, ChevronUp, Radio, Siren, Cpu } from 'lucide-react';
 import { BrandLogo } from '../common/Icons';
 import { useTraffic } from '../../context/TrafficContext';
 
@@ -30,7 +30,8 @@ export const Sidebar = ({ activeTab = 'dashboard', onSelectTab, onNavigateLandin
     { id: 'junctions', label: 'Junctions', icon: GitFork },
     { id: 'cameras', label: 'Cameras & Signals', icon: Camera },
     { id: 'incidents', label: 'Live Feed', icon: Radio },
-    { id: 'green-corridors', label: 'Green Corridors', icon: Siren }
+    { id: 'green-corridors', label: 'Green Corridors', icon: Siren },
+    { id: 'ai-insights', label: 'AI Insights', icon: Cpu }
   ];
 
   return (

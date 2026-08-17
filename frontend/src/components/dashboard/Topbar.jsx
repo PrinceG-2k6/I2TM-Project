@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Radio, Search, MapPin, Crosshair, ChevronDown, Check } from 'lucide-react';
 import { useTraffic } from '../../context/TrafficContext';
-import { INDIAN_CITIES } from '../../data/dummyData';
+
 import { getEmergencyFromCorridors } from '../../utils/trafficUtils';
 import { Button } from '../common/Button';
 

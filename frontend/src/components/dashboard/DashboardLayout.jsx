@@ -10,8 +10,9 @@ import { JunctionsView } from './views/JunctionsView';
 import { IncidentsView } from './views/IncidentsView';
 import { CamerasSignalsView } from './views/CamerasSignalsView';
 import { GreenCorridorsView } from './views/GreenCorridorsView';
+import { AiInsightsView } from './views/AiInsightsView';
 
-const VALID_TABS = ['dashboard', 'junctions', 'cameras', 'incidents', 'green-corridors'];
+const VALID_TABS = ['dashboard', 'junctions', 'cameras', 'incidents', 'green-corridors', 'ai-insights'];
 
 export const DashboardLayout = () => {
   const { tab } = useParams();
@@ -92,6 +93,8 @@ export const DashboardLayout = () => {
         return <IncidentsView />;
       case 'green-corridors':
         return <GreenCorridorsView />;
+      case 'ai-insights':
+        return <AiInsightsView />;
       default:
         return <OverviewView />;
     }

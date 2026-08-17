@@ -58,3 +58,6 @@ def get_ml_traffic_frame_collection() -> Collection:
 
 def get_lane_correction_collection() -> Collection:
     return get_database()["lane_corrections"]
+
+def get_config_collection() -> Collection:
+    return get_database()["dashboard_config"]

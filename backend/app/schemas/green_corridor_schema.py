@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 from bson import ObjectId
 from pydantic import BaseModel, Field, field_validator
@@ -56,5 +57,10 @@ class GreenCorridorResponse(BaseModel):
     destination: str | None = None
     status: GreenCorridorStatus
     junction_actions: list[GreenCorridorJunctionAction]
+    etaSeconds: int | None = None
+    distanceMeters: int | None = None
+    originPos: dict[str, float] | None = None
+    destPos: dict[str, float] | None = None
+    pathNodes: list[dict[str, Any]] | None = None
     created_at: datetime
     updated_at: datetime

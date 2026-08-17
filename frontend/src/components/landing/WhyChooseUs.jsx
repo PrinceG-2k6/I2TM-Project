@@ -18,30 +18,22 @@ const useScrollReveal = (threshold = 0.1) => {
 const WhyCard = ({ card, idx }) => {
   const [cardRef, cardVisible] = useScrollReveal(0.08);
   const Icon = card.icon;
-  const [hovered, setHovered] = useState(false);
 
   return (
     <div
       ref={cardRef}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       style={{
-        backgroundColor: hovered ? card.bg : '#1a1a1a',
-        border: `1px solid ${hovered ? card.border : 'rgba(255,255,255,0.06)'}`,
-        borderRadius: '16px',
+        backgroundColor: 'var(--color-2)',
+        border: '1px solid var(--color-3)',
+        borderRadius: '4px',
         padding: '28px',
         display: 'flex',
         flexDirection: 'column',
         cursor: 'default',
-        transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-        transform: cardVisible
-          ? hovered ? 'translateY(-4px)' : 'translateY(0)'
-          : 'translateY(40px)',
+        transition: 'all 0.35s ease',
+        transform: cardVisible ? 'translateY(0)' : 'translateY(40px)',
         opacity: cardVisible ? 1 : 0,
         transitionDelay: `${idx * 0.08}s`,
-        boxShadow: hovered
-          ? `0 20px 50px rgba(0,0,0,0.4), 0 0 0 1px ${card.border}`
-          : '0 4px 20px rgba(0,0,0,0.25)',
       }}
     >
       {/* Icon */}
@@ -49,15 +41,13 @@ const WhyCard = ({ card, idx }) => {
         style={{
           width: '44px',
           height: '44px',
-          borderRadius: '11px',
+          borderRadius: '4px',
           backgroundColor: card.bg,
           border: `1px solid ${card.border}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           marginBottom: '20px',
-          transition: 'all 0.3s ease',
-          transform: hovered ? 'scale(1.1)' : 'scale(1)',
         }}
       >
         <Icon size={20} color={card.accent} />
@@ -67,9 +57,7 @@ const WhyCard = ({ card, idx }) => {
       <div
         style={{
           fontSize: '38px',
-          fontWeight: '900',
           color: card.accent,
-          fontFamily: 'var(--font-heading)',
           lineHeight: 1,
           marginBottom: '4px',
           letterSpacing: '-0.03em',
@@ -80,8 +68,7 @@ const WhyCard = ({ card, idx }) => {
       <div
         style={{
           fontSize: '11px',
-          color: 'rgba(255,255,255,0.35)',
-          fontWeight: '600',
+          color: 'var(--color-3)',
           letterSpacing: '0.06em',
           textTransform: 'uppercase',
           marginBottom: '18px',
@@ -94,10 +81,8 @@ const WhyCard = ({ card, idx }) => {
       <h3
         style={{
           fontSize: '15px',
-          fontWeight: '700',
-          color: '#FFFFFF',
+          color: 'var(--color-4)',
           marginBottom: '10px',
-          fontFamily: 'var(--font-heading)',
           lineHeight: 1.3,
         }}
       >
@@ -108,7 +93,7 @@ const WhyCard = ({ card, idx }) => {
       <p
         style={{
           fontSize: '13px',
-          color: 'rgba(148, 163, 184, 0.75)',
+          color: 'var(--color-3)',
           lineHeight: 1.65,
           margin: 0,
         }}
@@ -129,9 +114,9 @@ export const WhyChooseUs = () => {
       description: 'Pre-clears conflicting junctions before the ambulance arrives, cutting average transit delays by up to 52%.',
       stat: '52%',
       statLabel: 'delay reduction',
-      accent: '#22C55E',
-      bg: 'rgba(34, 197, 94, 0.08)',
-      border: 'rgba(34, 197, 94, 0.18)',
+      accent: 'var(--color-6)',
+      bg: 'var(--color-1)',
+      border: 'var(--color-3)',
     },
     {
       icon: BarChart3,
@@ -139,9 +124,9 @@ export const WhyChooseUs = () => {
       description: 'Real-time adaptive green allocation reduces peak junction queues without fixed timer penalties.',
       stat: '3.2×',
       statLabel: 'throughput gain',
-      accent: '#3B82F6',
-      bg: 'rgba(59, 130, 246, 0.08)',
-      border: 'rgba(59, 130, 246, 0.18)',
+      accent: 'var(--color-6)',
+      bg: 'var(--color-1)',
+      border: 'var(--color-3)',
     },
     {
       icon: Clock,
@@ -149,9 +134,9 @@ export const WhyChooseUs = () => {
       description: 'Roadside countdown boards eliminate driver frustration and dramatically increase lane yielding compliance.',
       stat: '84%',
       statLabel: 'compliance rate',
-      accent: '#F59E0B',
-      bg: 'rgba(245, 158, 11, 0.08)',
-      border: 'rgba(245, 158, 11, 0.18)',
+      accent: 'var(--color-6)',
+      bg: 'var(--color-1)',
+      border: 'var(--color-3)',
     },
     {
       icon: Target,
@@ -159,9 +144,9 @@ export const WhyChooseUs = () => {
       description: 'Computer vision trajectory analytics detect aggressive lane cutting, sudden swerving, and unsafe violations.',
       stat: '94%',
       statLabel: 'detection accuracy',
-      accent: '#F97316',
-      bg: 'rgba(249, 115, 22, 0.08)',
-      border: 'rgba(249, 115, 22, 0.18)',
+      accent: 'var(--color-6)',
+      bg: 'var(--color-1)',
+      border: 'var(--color-3)',
     },
   ];
 
@@ -170,9 +155,9 @@ export const WhyChooseUs = () => {
       id="why-us"
       style={{
         padding: '100px 60px 120px',
-        backgroundColor: '#111111',
-        borderTop: '1px solid rgba(255,255,255,0.05)',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        backgroundColor: 'transparent',
+        borderTop: '1px solid var(--color-2)',
+        borderBottom: '1px solid var(--color-2)',
       }}
     >
       <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
@@ -184,14 +169,13 @@ export const WhyChooseUs = () => {
             marginBottom: '64px',
             opacity: headerVisible ? 1 : 0,
             transform: headerVisible ? 'translateY(0)' : 'translateY(30px)',
-            transition: 'all 0.75s cubic-bezier(0.16, 1, 0.3, 1)',
+            transition: 'all 0.75s ease',
           }}
         >
           <span
             style={{
               fontSize: '10px',
-              fontWeight: '800',
-              color: '#F97316',
+              color: 'var(--color-6)',
               letterSpacing: '0.15em',
               textTransform: 'uppercase',
               display: 'block',
@@ -203,11 +187,9 @@ export const WhyChooseUs = () => {
           <h2
             style={{
               fontSize: 'clamp(30px, 3.5vw, 48px)',
-              fontWeight: '900',
-              color: '#FFFFFF',
+              color: 'var(--color-4)',
               letterSpacing: '-0.03em',
               marginBottom: '16px',
-              fontFamily: 'var(--font-heading)',
             }}
           >
             Why Choose SARATHI
@@ -215,7 +197,7 @@ export const WhyChooseUs = () => {
           <p
             style={{
               fontSize: '15px',
-              color: 'rgba(148, 163, 184, 0.8)',
+              color: 'var(--color-3)',
               maxWidth: '480px',
               margin: '0 auto',
               lineHeight: 1.65,

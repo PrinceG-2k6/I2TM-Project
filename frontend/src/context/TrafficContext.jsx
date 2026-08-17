@@ -1,13 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
 import { fetchAPI, getWebSocketUrl } from '../utils/api';
-import {
-  INDIAN_CITIES,
-  EMERGENCY_PRESETS,
-  INITIAL_APPROACHES,
-  INITIAL_CORRIDORS,
-  INITIAL_ALERTS,
-  DEFAULT_PATH_NODES
-} from '../data/dummyData';
+
 
 const TrafficContext = createContext(null);
 
@@ -20,9 +13,12 @@ export const TrafficProvider = ({ children }) => {
   const [dashboardData, setDashboardData] = useState(null);
   const wsRef = useRef(null);
 
+  // App Config from Backend
+  const [appConfig, setAppConfig] = useState(null);
+
   // Active City & Location State
-  const [activeCity, setActiveCity] = useState(INDIAN_CITIES[0]);
-  const [cityCenter, setCityCenter] = useState(INDIAN_CITIES[0].center);
+  const [activeCity, setActiveCity] = useState(null);
+  const [cityCenter, setCityCenter] = useState(null);
 
   // Layer Visibility Toggles
   const [showCameras, setShowCameras] = useState(true);
@@ -59,6 +55,16 @@ export const TrafficProvider = ({ children }) => {
               [data.ambulance_id]: { ...prev[data.ambulance_id], position: data.position, progressPct: data.progressPct }
             };
           });
+          setActiveCorridors(prev => prev.map(c => {
+            if (c.vehicleId === data.ambulance_id) {
+              return { 
+                ...c, 
+                progressPct: data.progressPct,
+                countdownSeconds: Math.max(0, Math.floor(c.etaSeconds * (1 - (data.progressPct / 100))))
+              };
+            }
+            return c;
+          }));
         } else if (data.type === 'AMBULANCE_ARRIVED') {
           setLiveAmbulances(prev => {
             const next = { ...prev };
@@ -89,13 +95,31 @@ export const TrafficProvider = ({ children }) => {
   const [activeMapElementId, setActiveMapElementId] = useState(null);
 
   // 4 Junction Approaches
-  const [approaches, setApproaches] = useState(INITIAL_APPROACHES);
+  const [approaches, setApproaches] = useState(null);
 
   // Emergency Green Corridors
   const [activeCorridors, setActiveCorridors] = useState([]);
 
   // Master Alert List
   const [alerts, setAlerts] = useState([]);
+
+  // Fetch Config on Mount
+  useEffect(() => {
+    const initConfig = async () => {
+      try {
+        const config = await fetchAPI('/config');
+        setAppConfig(config);
+        setActiveCity(config.INDIAN_CITIES[0]);
+        setCityCenter(config.INDIAN_CITIES[0].center);
+        setApproaches(config.INITIAL_APPROACHES);
+        setAlerts(config.INITIAL_ALERTS || []);
+        setActiveCorridors(config.INITIAL_CORRIDORS || []);
+      } catch (err) {
+        console.error("Failed to load dashboard config:", err);
+      }
+    };
+    initConfig();
+  }, []);
 
   // Filters State
   const [filters, setFilters] = useState({
@@ -236,8 +260,8 @@ export const TrafficProvider = ({ children }) => {
   // Backend Integration: Green Corridor Actions
   // ---------------------------------------------------------------------------
   const triggerEmergencyCorridor = async (preset) => {
-    if (!selectedJunctionId) return;
-    const vehiclePreset = EMERGENCY_PRESETS[preset?.vehicleType] || EMERGENCY_PRESETS.AMBULANCE;
+    if (!selectedJunctionId || !appConfig) return;
+    const vehiclePreset = appConfig.EMERGENCY_PRESETS[preset?.vehicleType] || appConfig.EMERGENCY_PRESETS.AMBULANCE;
     
     try {
        const payload = {
@@ -257,17 +281,17 @@ export const TrafficProvider = ({ children }) => {
          vehicleIcon: vehiclePreset.vehicleIcon,
          vehicleId: vehiclePreset.vehicleId,
          patientSeverity: 'CRITICAL',
-         etaSeconds: 120,
-         countdownSeconds: 120,
+         etaSeconds: data.etaSeconds || 120,
+         countdownSeconds: data.etaSeconds || 120,
          destination: payload.destination,
          origin: 'Backend Activated',
-         distanceMeters: vehiclePreset.distanceMeters,
+         distanceMeters: data.distanceMeters || vehiclePreset.distanceMeters,
          routeCongestionPct: 0,
          roadsideMessage: `Green corridor active for ${vehiclePreset.vehicleId}`,
          targetApproach: 'East Commercial Arterial',
-         originPos: { lat: cityCenter.lat - 0.0080, lng: cityCenter.lng - 0.0012 },
-         destPos: { lat: cityCenter.lat + 0.0006, lng: cityCenter.lng + 0.0008 },
-         pathNodes: DEFAULT_PATH_NODES,
+         originPos: data.originPos || { lat: cityCenter.lat - 0.0080, lng: cityCenter.lng - 0.0012 },
+         destPos: data.destPos || { lat: cityCenter.lat + 0.0006, lng: cityCenter.lng + 0.0008 },
+         pathNodes: data.pathNodes || appConfig.DEFAULT_PATH_NODES,
          progressPct: 15
        };
        setActiveCorridors(prev => [newCorridor, ...prev]);
@@ -312,9 +336,21 @@ export const TrafficProvider = ({ children }) => {
     }
   };
 
+  if (!appConfig) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-(--color-4) text-(--color-2)">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-(--color-3) border-t-(--color-6) rounded-full animate-spin" />
+          <div>Loading system...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <TrafficContext.Provider
       value={{
+        appConfig,
         backendJunctions,
         selectedJunctionId,
         setSelectedJunctionId,

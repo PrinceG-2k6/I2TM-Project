@@ -25,11 +25,24 @@ def _to_junction_object_id(junction_id: str) -> ObjectId:
 
 def activate_green_corridor(payload: GreenCorridorActivateRequest) -> dict[str, Any]:
     junction_actions: list[dict[str, Any]] = []
+    
+    # Track dynamic path mapping
+    pathNodes = []
+    originPos = None
+    destPos = None
+    
     for junction in payload.upcoming_junctions:
         junction_object_id = _to_junction_object_id(junction.junction_id)
         junction_exists = get_junction_collection().find_one({"_id": junction_object_id})
         if junction_exists is None:
             raise LookupError("Junction not found")
+            
+        pathNodes.append({
+            "id": str(junction_exists["_id"]),
+            "name": junction_exists["name"],
+            "lat": junction_exists["latitude"],
+            "lng": junction_exists["longitude"]
+        })
 
         junction_actions.append(
             {
@@ -42,6 +55,14 @@ def activate_green_corridor(payload: GreenCorridorActivateRequest) -> dict[str, 
                 "timestamp": utc_now(),
             },
         )
+        
+    if pathNodes:
+        originPos = {"lat": pathNodes[0]["lat"], "lng": pathNodes[0]["lng"]}
+        destPos = {"lat": pathNodes[-1]["lat"], "lng": pathNodes[-1]["lng"]}
+        
+    # Calculate simple ETA based on number of junctions (approx 2 mins per junction in traffic)
+    distanceMeters = len(pathNodes) * 1000
+    etaSeconds = len(pathNodes) * 120
 
     document = build_green_corridor_document(
         {
@@ -55,7 +76,16 @@ def activate_green_corridor(payload: GreenCorridorActivateRequest) -> dict[str, 
 
     result = get_green_corridor_collection().insert_one(document)
     document["_id"] = result.inserted_id
-    return _serialize_corridor(document)
+    serialized = _serialize_corridor(document)
+    
+    # Inject dynamic metadata not stored in db for response
+    serialized["etaSeconds"] = etaSeconds
+    serialized["distanceMeters"] = distanceMeters
+    serialized["originPos"] = originPos
+    serialized["destPos"] = destPos
+    serialized["pathNodes"] = pathNodes
+    
+    return serialized
 
 
 def deactivate_green_corridor(corridor_id: str) -> dict[str, Any]:

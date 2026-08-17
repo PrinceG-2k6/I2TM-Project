@@ -138,9 +138,25 @@ def process_telemetry(payload: dict[str, Any]) -> dict[str, Any]:
             pass
 
     if closest_junction_id is None:
-        # Fallback to the first junction in the list if no valid coordinates found
-        closest_junction_id = active_routes[0]
-        min_distance = 1000.0  # mock 1km
+        # Fallback to spatial query to find the nearest junction across the entire network
+        nearest_junction = junction_col.find_one({
+            "location": {
+                "$near": {
+                    "$geometry": {
+                        "type": "Point",
+                        "coordinates": [payload["longitude"], payload["latitude"]]
+                    }
+                }
+            }
+        })
+        if nearest_junction:
+            closest_junction_id = str(nearest_junction["_id"])
+            min_distance = haversine_distance(
+                payload["latitude"], payload["longitude"],
+                nearest_junction["latitude"], nearest_junction["longitude"]
+            )
+        else:
+            raise ValueError("No nearby junctions found within the spatial index")
 
     speed_mps = max(payload.get("speed_kmh", 0) / 3.6, 1.0)
     eta_seconds = int(min_distance / speed_mps)

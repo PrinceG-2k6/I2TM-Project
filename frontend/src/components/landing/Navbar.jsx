@@ -7,13 +7,25 @@ export const Navbar = ({ onOpenDashboard }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => {
+      const currentScrollY = window.scrollY;
+      setScrolled(currentScrollY > 20);
+      
+      if (currentScrollY > lastScrollY && currentScrollY > 80) {
+        setHidden(true); // scrolling down
+      } else {
+        setHidden(false); // scrolling up
+      }
+      setLastScrollY(currentScrollY);
+    };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [lastScrollY]);
 
   const handleLogoClick = () => {
     if (location.pathname === '/') {
@@ -57,17 +69,15 @@ export const Navbar = ({ onOpenDashboard }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          backgroundColor: scrolled ? 'rgba(13, 13, 13, 0.92)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
-          WebkitBackdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
-          borderBottom: scrolled ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid transparent',
+          backgroundColor: scrolled ? 'var(--color-1)' : 'transparent',
+          borderBottom: scrolled ? '1px solid var(--color-2)' : '1px solid transparent',
           position: 'fixed',
-          top: 0,
+          top: hidden ? '-72px' : '0',
           left: 0,
           right: 0,
           zIndex: 100,
-          transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-          color: '#FFFFFF'
+          transition: 'top 0.3s ease, background-color 0.3s ease, border-bottom 0.3s ease',
+          color: 'var(--color-4)'
         }}
       >
         {/* Brand Logo */}
@@ -75,28 +85,14 @@ export const Navbar = ({ onOpenDashboard }) => {
           onClick={handleLogoClick}
           style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
         >
-          <BrandLogo size={30} color="#F97316" />
+          <BrandLogo size={28} />
           <div>
             <span style={{
-              fontSize: '20px',
-              fontWeight: '900',
-              color: '#FFFFFF',
-              letterSpacing: '-0.02em',
-              fontFamily: 'var(--font-heading)',
-              textTransform: 'uppercase'
+              fontSize: '18px',
+              color: 'var(--color-4)',
+              letterSpacing: '0.05em',
             }}>
               SARATHI
-            </span>
-            <span style={{
-              fontSize: '9px',
-              display: 'block',
-              color: '#F97316',
-              fontWeight: '700',
-              letterSpacing: '0.1em',
-              marginTop: '-2px',
-              textTransform: 'uppercase'
-            }}>
-              सारथी · Smart Traffic Intelligence
             </span>
           </div>
         </div>
@@ -109,23 +105,12 @@ export const Navbar = ({ onOpenDashboard }) => {
               onClick={link.action}
               style={{
                 fontSize: '13px',
-                fontWeight: '500',
-                color: 'rgba(255,255,255,0.65)',
+                color: 'var(--color-3)',
                 cursor: 'pointer',
                 background: 'none',
                 border: 'none',
                 padding: '8px 14px',
-                borderRadius: '8px',
-                transition: 'all 0.2s ease',
-                letterSpacing: '0.01em'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#FFFFFF';
-                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'rgba(255,255,255,0.65)';
-                e.currentTarget.style.backgroundColor = 'transparent';
+                borderRadius: '2px',
               }}
             >
               {link.label}
@@ -139,56 +124,33 @@ export const Navbar = ({ onOpenDashboard }) => {
             onClick={() => onOpenDashboard && onOpenDashboard('dashboard')}
             style={{
               fontSize: '13px',
-              fontWeight: '600',
-              color: 'rgba(255,255,255,0.75)',
+              color: 'var(--color-3)',
               cursor: 'pointer',
               background: 'none',
-              border: '1px solid rgba(255,255,255,0.15)',
+              border: '1px solid var(--color-2)',
               padding: '8px 16px',
-              borderRadius: '8px',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = '#FFFFFF';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.35)';
-              e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'rgba(255,255,255,0.75)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
-              e.currentTarget.style.backgroundColor = 'transparent';
+              borderRadius: '2px',
             }}
           >
-            Command Center
+            Dashboard
           </button>
 
           <button
             onClick={() => onOpenDashboard && onOpenDashboard('dashboard')}
             style={{
               fontSize: '13px',
-              fontWeight: '700',
-              color: '#FFFFFF',
+              color: 'var(--color-4)',
               cursor: 'pointer',
-              background: 'linear-gradient(135deg, #F97316, #EA580C)',
+              background: 'var(--color-6)',
               border: 'none',
               padding: '9px 18px',
-              borderRadius: '8px',
-              transition: 'all 0.2s ease',
+              borderRadius: '2px',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              boxShadow: '0 4px 15px rgba(249, 115, 22, 0.35)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(249, 115, 22, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 15px rgba(249, 115, 22, 0.35)';
             }}
           >
-            Get Started
+            Open App
             <ArrowRight size={14} />
           </button>
 
@@ -199,7 +161,7 @@ export const Navbar = ({ onOpenDashboard }) => {
               display: 'none',
               background: 'none',
               border: 'none',
-              color: '#FFF',
+              color: 'var(--color-4)',
               cursor: 'pointer',
               padding: '4px'
             }}
