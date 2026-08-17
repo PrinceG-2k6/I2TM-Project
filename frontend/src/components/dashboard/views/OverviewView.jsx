@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useJsApiLoader, GoogleMap, MarkerF, PolygonF, Polyline, InfoWindow } from '@react-google-maps/api';
 import { useTraffic } from '../../../context/TrafficContext';
 import { INDIAN_CITIES, generateOverviewStats, MAP_CONTAINER_STYLE, MAP_OPTIONS, CAMERA_APPROACH_CONFIG, SIGNAL_APPROACH_CONFIG } from '../../../data/dummyData';
@@ -61,6 +62,7 @@ const calculateSectorPath = (center, radiusMeters, startAngle, endAngle, numPoin
 };
 
 export const OverviewView = () => {
+  const navigate = useNavigate();
   const {
     activeCity,
     cityCenter,
@@ -74,11 +76,11 @@ export const OverviewView = () => {
     showCorridor, setShowCorridor,
     clearAllFilters,
   } = useTraffic();
-  const { alerts, activeMapElementId, setActiveMapElementId } = useTraffic();
+  const { alerts, activeMapElementId, setActiveMapElementId, liveAmbulances, liveMLStats } = useTraffic();
   const [activeIncident, setActiveIncident] = useState(null);
   const [selectedElement, setSelectedElement] = useState(null);
   const emergency = getEmergencyFromCorridors(activeCorridors);
-  const isTargeting = false;
+  const [isTargeting, setIsTargeting] = useState(false);
   const [equipmentList, setEquipmentList] = useState([]);
 
   // Fetch Junctions & Equipment for markers
@@ -130,107 +132,85 @@ export const OverviewView = () => {
   const westApp  = approaches?.West  || { vehicleCount: 0, densityPct: 0, currentLight: 'RED', greenSec: 0 };
   const southApp = approaches?.South || { vehicleCount: 0, densityPct: 0, currentLight: 'RED', greenSec: 0 };
 
-  // Generate junction nodes for ALL Indian cities from INDIAN_CITIES data
+  // Use junctions from the backend
   const junctionNodes = useMemo(() => {
-    const nodes = [];
-    INDIAN_CITIES.forEach((city) => {
-      const { lat, lng } = city.center;
-      (city.junctions || [`${city.name} Main Hub`]).forEach((jName, idx) => {
-        const offsetLat = idx === 0 ? 0 : (idx % 2 === 0 ? -1 : 1) * (0.007 + idx * 0.005);
-        const offsetLng = idx === 0 ? 0 : (idx % 3 === 0 ? -1 : 1) * (0.009 + idx * 0.006);
-        nodes.push({
-          id: `${city.id}-JUNC-${idx + 1}`,
-          cityId: city.id,
-          cityName: city.name,
-          name: jName,
-          position: { lat: lat + offsetLat, lng: lng + offsetLng },
-          densityPct: Math.floor(Math.random() * 40) + 50,
-          vehicleCount: Math.floor(Math.random() * 90) + 35,
-          status: idx === 0 ? 'CRITICAL' : idx % 2 === 0 ? 'HIGH' : 'OPTIMAL'
-        });
-      });
-    });
-    // Custom searched city
-    if (activeCity && !INDIAN_CITIES.some((c) => c.id === activeCity.id)) {
-      const { lat, lng } = activeCity.center;
-      nodes.push(
-        { id: `${activeCity.id}-JUNC-1`, cityId: activeCity.id, cityName: activeCity.name, name: `${activeCity.name} Central Junction`, position: { lat, lng }, densityPct: 78, vehicleCount: 64, status: 'CRITICAL' },
-        { id: `${activeCity.id}-JUNC-2`, cityId: activeCity.id, cityName: activeCity.name, name: `${activeCity.name} Ring Road Node`, position: { lat: lat + 0.008, lng: lng + 0.010 }, densityPct: 62, vehicleCount: 48, status: 'HIGH' }
-      );
-    }
-    return nodes;
-  }, [activeCity]);
+    return junctions.map((j) => ({
+      id: j.id,
+      cityId: 'nagpur',
+      cityName: 'Nagpur',
+      name: j.name,
+      position: { lat: j.latitude, lng: j.longitude },
+      densityPct: Math.floor(Math.random() * 40) + 50,
+      vehicleCount: Math.floor(Math.random() * 90) + 35,
+      status: j.status || 'ACTIVE'
+    }));
+  }, [junctions]);
 
-  // Camera FOV wedge zones derived from CAMERA_APPROACH_CONFIG
+  // Camera FOV wedge zones derived from backend equipment
   const cameraZones = useMemo(() => {
-    const zones = [];
-    junctionNodes.forEach((junc) => {
-      const { lat, lng } = junc.position;
-      CAMERA_APPROACH_CONFIG.forEach((cfg) => {
-        const appMap = { N: northApp, E: eastApp, W: westApp, S: southApp };
-        const app = junc.name === selectedJunction ? appMap[cfg.dir] : null;
-        if (!app) return;
-        zones.push({
-          id: `${junc.id}-CAM-${cfg.dir}`,
-          junctionName: junc.name,
-          name: `${junc.name} ${cfg.label}`,
-          approach: `${cfg.dir === 'N' ? 'North' : cfg.dir === 'E' ? 'East' : cfg.dir === 'W' ? 'West' : 'South'} Approach`,
-          center: { lat: lat + cfg.latOff, lng: lng + cfg.lngOff },
+    return equipmentList
+      .filter(eq => eq.device_type === 'CAMERA')
+      .map(eq => {
+        const app = eq.approach || '';
+        let startAngle = 0, endAngle = 360;
+        if (app.includes('North')) { startAngle = 55; endAngle = 125; }
+        else if (app.includes('East')) { startAngle = 145; endAngle = 215; }
+        else if (app.includes('West')) { startAngle = 235; endAngle = 305; }
+        else if (app.includes('South')) { startAngle = 325; endAngle = 35; }
+        
+        return {
+          id: eq.device_id,
+          junctionName: eq.junction_name,
+          name: eq.name,
+          approach: eq.approach,
+          center: { lat: eq.latitude, lng: eq.longitude },
           radius: 140,
-          startAngle: cfg.startAngle,
-          endAngle: cfg.endAngle,
+          startAngle,
+          endAngle,
           fovSector: '70° Sector Arc',
           resolution: '1080p 60fps',
-          detectionModel: cfg.model,
-          activeVehicles: app.vehicleCount,
-          densityPct: app.densityPct,
+          detectionModel: 'YOLOv8',
+          activeVehicles: Math.floor(Math.random() * 40),
+          densityPct: Math.floor(Math.random() * 100),
           color: '#F59E0B'
-        });
+        };
       });
-    });
-    return zones;
-  }, [junctionNodes]);
+  }, [equipmentList]);
 
-  // Signal nodes derived from SIGNAL_APPROACH_CONFIG
+  // Signal nodes derived from backend equipment
   const signalNodes = useMemo(() => {
-    const signals = [];
-    const appMap = { North: northApp, East: eastApp, West: westApp, South: southApp };
-    junctionNodes.forEach((junc) => {
-      const { lat, lng } = junc.position;
-      SIGNAL_APPROACH_CONFIG.forEach((cfg) => {
-        const app = junc.name === selectedJunction ? appMap[cfg.appKey] : null;
-        if (!app) return;
-        signals.push({
-          id: `${junc.id}-SIG-${cfg.dir}`,
-          junctionName: junc.name,
-          name: `${junc.name} ${cfg.appKey} Signal`,
-          approach: `${cfg.appKey} Approach`,
-          position: { lat: lat + cfg.latOff, lng: lng + cfg.lngOff },
-          light: app.currentLight,
-          greenSec: app.greenSec,
-          densityPct: app.densityPct,
-          vehicles: app.vehicleCount
-        });
+    return equipmentList
+      .filter(eq => eq.device_type === 'SIGNAL')
+      .map(eq => {
+        return {
+          id: eq.device_id,
+          junctionName: eq.junction_name,
+          name: eq.name,
+          approach: eq.approach,
+          position: { lat: eq.latitude, lng: eq.longitude },
+          light: ['RED', 'GREEN', 'YELLOW'][Math.floor(Math.random() * 3)],
+          greenSec: Math.floor(Math.random() * 60),
+          densityPct: Math.floor(Math.random() * 100),
+          vehicles: Math.floor(Math.random() * 40)
+        };
       });
-    });
-    return signals;
-  }, [junctionNodes, selectedJunction, northApp, eastApp, westApp, southApp]);
+  }, [equipmentList]);
 
-  // Junction dropdown options for active city
+  // Junction dropdown options
   const cityJunctionOptions = useMemo(() => {
-    const activeJuncs = junctionNodes.filter((j) => j.cityId === (activeCity?.id || 'delhi'));
-    if (activeJuncs.length === 0) {
-      return [{ value: selectedJunction || 'Central Hub', label: selectedJunction || 'Central Hub' }];
-    }
-    return activeJuncs.map((j) => ({ value: j.name, label: j.name }));
-  }, [junctionNodes, activeCity, selectedJunction]);
+    if (junctions.length === 0) return [{ value: selectedJunction || 'Central Hub', label: selectedJunction || 'Central Hub' }];
+    return junctions.map((j) => ({ value: j.name, label: j.name }));
+  }, [junctions, selectedJunction]);
 
   // Pan to selected junction on change
   useEffect(() => {
     if (!selectedJunction || !mapRef.current) return;
-    const targetJunc = junctionNodes.find((j) => j.name === selectedJunction);
-    if (targetJunc) { mapRef.current.panTo(targetJunc.position); mapRef.current.setZoom(15); }
-  }, [selectedJunction, junctionNodes]);
+    const targetJunc = junctions.find((j) => j.name === selectedJunction);
+    if (targetJunc) { 
+      mapRef.current.panTo({ lat: targetJunc.latitude, lng: targetJunc.longitude }); 
+      mapRef.current.setZoom(16); 
+    }
+  }, [selectedJunction, junctions]);
 
   // Listen for activeMapElementId to pan map to device
   useEffect(() => {
@@ -238,15 +218,30 @@ export const OverviewView = () => {
       const mapContainer = document.getElementById('map-radar-container');
       if (mapContainer) mapContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setIsTargeting(true);
-      setTimeout(() => {
+      
+      const timer = setTimeout(() => {
         setIsTargeting(false);
-        const cam = cameraZones.find((c) => c.id === activeMapElementId);
-        if (cam) { setSelectedElement({ type: 'camera', data: cam }); mapRef.current.panTo(cam.center); mapRef.current.setZoom(18); setActiveMapElementId(null); return; }
-        const sig = signalNodes.find((s) => s.id === activeMapElementId);
-        if (sig) { setSelectedElement({ type: 'signal', data: sig }); mapRef.current.panTo(sig.position); mapRef.current.setZoom(18); setActiveMapElementId(null); }
-      }, 1000);
+        if (equipmentList.length === 0) {
+          // If equipment hasn't loaded yet, try again shortly or just abort. 
+          // For now, we just clear it to prevent infinite loops, but since it's in a dependency array, 
+          // we can just wait for equipmentList to populate.
+          return; 
+        }
+        
+        const eq = equipmentList.find((e) => e.device_id === activeMapElementId);
+        if (eq) {
+          setSelectedElement({ type: eq.device_type === 'CAMERA' ? 'camera' : 'signal', data: eq });
+          mapRef.current.panTo({ lat: eq.latitude, lng: eq.longitude });
+          mapRef.current.setZoom(20);
+        }
+        
+        // Always clear so it doesn't re-trigger
+        setActiveMapElementId(null);
+      }, 500);
+      
+      return () => clearTimeout(timer);
     }
-  }, [activeMapElementId, cameraZones, signalNodes]);
+  }, [activeMapElementId, equipmentList, setActiveMapElementId]);
 
   // Emergency corridor route polylines
   const [corridorPaths, setCorridorPaths] = useState({});
@@ -254,7 +249,6 @@ export const OverviewView = () => {
   useEffect(() => {
     let isMounted = true;
     activeCorridors.forEach(async (corridor) => {
-      // Skip if we already have the path or it has dynamic points already
       if (corridorPaths[corridor.id] || (corridor.pathPoints && corridor.pathPoints.length > 0)) {
         if (corridor.pathPoints && corridor.pathPoints.length > 0 && !corridorPaths[corridor.id]) {
           setCorridorPaths((prev) => ({ ...prev, [corridor.id]: corridor.pathPoints }));
@@ -284,55 +278,36 @@ export const OverviewView = () => {
 
   const renderMapContent = () => (
     <>
-      {/* Junction Hub Markers */}
-      {junctionNodes.map((junc) => (
-        <MarkerF
-          key={junc.id}
-          position={junc.position}
-          title={`Junction: ${junc.name} (${junc.vehicleCount} vehicles)`}
-          icon={{
-            path: window.google ? window.google.maps.SymbolPath.CIRCLE : undefined,
-            scale: junc.name === selectedJunction ? 14 : 11,
-            fillColor: junc.name === selectedJunction ? '#7C3AED' : '#4F46E5',
-            fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 3
-          }}
-          onClick={() => { setSelectedJunction && setSelectedJunction(junc.name); setSelectedElement({ type: 'junction', data: junc }); }}
-        />
-      ))}
-
-      {/* Camera FOV Wedges */}
-      {showCameras && cameraZones.map((cam) => {
-        const sectorPath = calculateSectorPath(cam.center, cam.radius, cam.startAngle, cam.endAngle);
-        return (
-          <React.Fragment key={cam.id}>
-            <PolygonF
-              paths={sectorPath}
-              options={{ strokeColor: cam.color, strokeOpacity: 0.95, strokeWeight: 2.5, fillColor: cam.color, fillOpacity: 0.35, clickable: true }}
-              onClick={() => setSelectedElement({ type: 'camera', data: cam })}
+      {/* Real-time Moving Ambulances via WebSockets */}
+      {showCorridor && Object.entries(liveAmbulances || {}).map(([id, amb]) => (
+        <React.Fragment key={`live-amb-${id}`}>
+          {amb.route && amb.route.length > 0 && (
+            <PolylineF
+              path={amb.route.map(pt => ({ lat: pt[1], lng: pt[0] }))}
+              options={{
+                strokeColor: '#22c55e',
+                strokeOpacity: 0.8,
+                strokeWeight: 6,
+              }}
             />
+          )}
+          {amb.position && (
             <MarkerF
-              position={cam.center}
-              title={`${cam.name} (${cam.fovSector})`}
-              icon={{ path: window.google ? window.google.maps.SymbolPath.CIRCLE : undefined, scale: 8, fillColor: cam.color, fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 2.5 }}
-              onClick={() => setSelectedElement({ type: 'camera', data: cam })}
+              position={{ lat: amb.position.lat, lng: amb.position.lng }}
+              icon={{
+                path: window.google ? window.google.maps.SymbolPath.CIRCLE : undefined,
+                scale: 12,
+                fillColor: '#ef4444',
+                fillOpacity: 1,
+                strokeWeight: 3,
+                strokeColor: '#ffffff',
+              }}
+              title={`Live Ambulance ${id} - ${amb.progressPct}%`}
+              zIndex={100}
             />
-          </React.Fragment>
-        );
-      })}
-
-      {/* Signal Color Markers */}
-      {showSignals && signalNodes.map((sig) => {
-        const hex = getSignalHex(sig.light);
-        return (
-          <MarkerF
-            key={sig.id}
-            position={sig.position}
-            title={`${sig.name}: ${sig.light}`}
-            icon={{ path: window.google ? window.google.maps.SymbolPath.CIRCLE : undefined, scale: 10, fillColor: hex, fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 3 }}
-            onClick={() => setSelectedElement({ type: 'signal', data: sig })}
-          />
-        );
-      })}
+          )}
+        </React.Fragment>
+      ))}
 
       {/* Green Corridor Polyline & Markers */}
       {showCorridor && activeCorridors.map((corridor) => {
@@ -359,48 +334,6 @@ export const OverviewView = () => {
                 }
               })}
             />
-            {junctions.map((j) => (
-              <MarkerF
-                key={j.id}
-                position={{ lat: j.latitude, lng: j.longitude }}
-                icon={{
-                  path: window.google.maps.SymbolPath.CIRCLE,
-                  scale: 8,
-                  fillColor: '#6366f1',
-                  fillOpacity: 0.8,
-                  strokeWeight: 2,
-                  strokeColor: '#ffffff',
-                }}
-                title={j.name}
-              />
-            ))}
-            
-            {equipmentList.map((eq) => {
-              const isCam = eq.device_type === 'CAMERA';
-              const isSelected = activeMapElementId === eq.device_id;
-              
-              return (
-                <MarkerF
-                  key={eq.device_id}
-                  position={{ lat: eq.latitude, lng: eq.longitude }}
-                  title={eq.name}
-                  icon={{
-                    // Camera icon (SVG path) or simple square for signals
-                    path: isCam 
-                      ? "M 10,2 10,6 22,6 22,22 2,22 2,6 10,6 10,2 z M 6,14 A 4,4 0 1,1 14,14 A 4,4 0 1,1 6,14" 
-                      : "M 4,4 L 20,4 L 20,20 L 4,20 Z",
-                    fillColor: isSelected ? '#3b82f6' : isCam ? '#10b981' : '#f59e0b',
-                    fillOpacity: 1,
-                    strokeWeight: 1,
-                    strokeColor: '#ffffff',
-                    scale: isSelected ? 1.2 : 0.8,
-                    anchor: new window.google.maps.Point(12, 12)
-                  }}
-                  zIndex={isSelected ? 100 : 10}
-                />
-              );
-            })}
-            
             {/* Draw green corridor paths */}
             <MarkerF
               position={path[path.length - 1]}
@@ -420,31 +353,140 @@ export const OverviewView = () => {
         );
       })}
 
+      {/* Real Junction Markers from Database */}
+      {junctions
+        .map((j) => (
+        <MarkerF
+          key={j.id || j._id}
+          position={{ lat: j.latitude, lng: j.longitude }}
+          icon={{
+            path: window.google ? window.google.maps.SymbolPath.CIRCLE : undefined,
+            scale: 8,
+            fillColor: '#6366f1',
+            fillOpacity: 0.8,
+            strokeWeight: 2,
+            strokeColor: '#ffffff',
+          }}
+          title={j.name}
+        />
+      ))}
+      
+      {/* Camera FOV Zones */}
+      {showCameras && cameraZones.map((zone) => (
+        <PolygonF
+          key={zone.id}
+          path={calculateSectorPath(zone.center, zone.radius, zone.startAngle, zone.endAngle)}
+          options={{
+            fillColor: zone.color,
+            fillOpacity: 0.25,
+            strokeColor: zone.color,
+            strokeOpacity: 0.6,
+            strokeWeight: 1.5,
+            clickable: true
+          }}
+          onClick={() => {
+            navigate(`?tab=cameras_signals&id=${zone.id}`);
+          }}
+          onMouseOver={() => setSelectedElement({ type: 'camera', data: zone })}
+        />
+      ))}
+
+      {/* Real Equipment Markers from Database */}
+      {equipmentList
+        .filter((eq) => {
+          if (!showCameras && eq.device_type === 'CAMERA') return false;
+          if (!showSignals && eq.device_type === 'SIGNAL') return false;
+          return true;
+        })
+        .map((eq) => {
+        const live = liveMLStats && liveMLStats[eq.device_id] ? liveMLStats[eq.device_id] : null;
+        const displayEq = live ? {
+          ...eq,
+          status: live.status || eq.status,
+          live_vehicles: live.activeVehicles !== undefined ? live.activeVehicles : eq.live_vehicles,
+          density_pct: live.densityPct !== undefined ? live.densityPct : eq.density_pct
+        } : eq;
+
+        const isCam = displayEq.device_type === 'CAMERA';
+        const isSelected = activeMapElementId === displayEq.device_id;
+        
+        return (
+          <MarkerF
+            key={displayEq.id || displayEq._id}
+            position={{ lat: displayEq.latitude, lng: displayEq.longitude }}
+            title={`${displayEq.name} - ${displayEq.status} (Density: ${displayEq.density_pct || 0}%)`}
+            icon={{
+              url: isCam ? '/cctv_icon.svg' : '/traffic_signal.svg',
+              scaledSize: window.google ? new window.google.maps.Size(isSelected ? 36 : 26, isSelected ? 36 : 26) : null,
+              anchor: window.google ? new window.google.maps.Point(13, 13) : null
+            }}
+            zIndex={isSelected ? 100 : 10}
+            onClick={() => {
+              setActiveMapElementId(displayEq.device_id);
+              navigate(`?tab=cameras_signals&id=${displayEq.device_id}`);
+            }}
+            onMouseOver={() => setSelectedElement({ 
+              type: isCam ? 'camera' : 'signal', 
+              data: {
+                ...displayEq,
+                center: { lat: displayEq.latitude, lng: displayEq.longitude },
+                position: { lat: displayEq.latitude, lng: displayEq.longitude },
+                light: ['RED', 'GREEN', 'YELLOW'][Math.floor(Math.random() * 3)],
+                greenSec: Math.floor(Math.random() * 60)
+              } 
+            })}
+          />
+        );
+      })}
+
       {/* InfoWindow on Click */}
       {selectedElement && (
         <InfoWindow
           position={
-            selectedElement.type === 'camera' ? selectedElement.data.center
-            : selectedElement.type === 'signal' ? selectedElement.data.position
+            selectedElement.data.latitude ? { lat: selectedElement.data.latitude, lng: selectedElement.data.longitude } // Backend equipment
+            : selectedElement.type === 'camera' ? selectedElement.data.center // Hardcoded camera
+            : selectedElement.type === 'signal' ? selectedElement.data.position // Hardcoded signal
             : selectedElement.data.position
           }
           onCloseClick={() => setSelectedElement(null)}
         >
           <div className="py-2 px-3 min-w-45 text-slate-900">
             <div className="text-[13px] font-extrabold mb-1">{selectedElement.data.name}</div>
+            
+            {/* Camera Details */}
             {selectedElement.type === 'camera' && (
               <div className="text-[11px] text-slate-600">
                 <div>Approach: {selectedElement.data.approach}</div>
-                <div>Coverage Radius: {selectedElement.data.radius}m</div>
-                <div>AI Model: {selectedElement.data.detectionModel}</div>
-                <div className="text-sky-600 font-bold mt-1">Live Vehicles: {selectedElement.data.activeVehicles} units ({selectedElement.data.densityPct}%)</div>
+                {selectedElement.data.device_id ? (
+                  <>
+                    <div>Device ID: {selectedElement.data.device_id}</div>
+                    <div className="text-sky-600 font-bold mt-1">Status: {selectedElement.data.status}</div>
+                  </>
+                ) : (
+                  <>
+                    <div>Coverage Radius: {selectedElement.data.radius}m</div>
+                    <div>AI Model: {selectedElement.data.detectionModel}</div>
+                    <div className="text-sky-600 font-bold mt-1">Live Vehicles: {selectedElement.data.activeVehicles} units ({selectedElement.data.densityPct}%)</div>
+                  </>
+                )}
               </div>
             )}
+            
+            {/* Signal Details */}
             {selectedElement.type === 'signal' && (
               <div className="text-[11px] text-slate-600">
                 <div>Approach: {selectedElement.data.approach}</div>
-                <div>State: <strong style={{ color: getSignalHex(selectedElement.data.light) }}>{selectedElement.data.light}</strong> ({selectedElement.data.greenSec}s)</div>
-                <div>Approach Density: {selectedElement.data.densityPct}%</div>
+                {selectedElement.data.device_id ? (
+                  <>
+                    <div>Device ID: {selectedElement.data.device_id}</div>
+                    <div className="text-emerald-600 font-bold mt-1">Status: {selectedElement.data.status}</div>
+                  </>
+                ) : (
+                  <>
+                    <div>State: <strong style={{ color: getSignalHex(selectedElement.data.light) }}>{selectedElement.data.light}</strong> ({selectedElement.data.greenSec}s)</div>
+                    <div>Approach Density: {selectedElement.data.densityPct}%</div>
+                  </>
+                )}
               </div>
             )}
             {selectedElement.type === 'ambulance' && (

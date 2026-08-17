@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
 import { fetchAPI, getWebSocketUrl } from '../utils/api';
 import {
   INDIAN_CITIES,
@@ -23,8 +23,6 @@ export const TrafficProvider = ({ children }) => {
   // Active City & Location State
   const [activeCity, setActiveCity] = useState(INDIAN_CITIES[0]);
   const [cityCenter, setCityCenter] = useState(INDIAN_CITIES[0].center);
-  const [userLocationDetected, setUserLocationDetected] = useState(false);
-  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
 
   // Layer Visibility Toggles
   const [showCameras, setShowCameras] = useState(true);
@@ -35,7 +33,59 @@ export const TrafficProvider = ({ children }) => {
   const [selectedJunction, setSelectedJunction] = useState(''); // Keep string for UI compat initially
   const [isLiveSimulating, setIsLiveSimulating] = useState(true);
 
-  // Cross-view map element targeting
+  //  const [alerts, setAlerts] = useState([]);
+
+  // Live Simulation / WebSockets State
+  const [liveAmbulances, setLiveAmbulances] = useState({}); // { id: { position, route, progress } }
+  const [liveMLStats, setLiveMLStats] = useState({}); // { device_id: { densityPct, activeVehicles, status } }
+
+  useEffect(() => {
+    // Setup WebSocket connection to backend
+    const ws = new WebSocket(getWebSocketUrl('/ws/live-dashboard'));
+    
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'AMBULANCE_DISPATCH') {
+          setLiveAmbulances(prev => ({
+            ...prev,
+            [data.ambulance_id]: { route: data.route, position: data.route[0], status: data.status, progressPct: 0 }
+          }));
+        } else if (data.type === 'AMBULANCE_MOVE') {
+          setLiveAmbulances(prev => {
+            if (!prev[data.ambulance_id]) return prev;
+            return {
+              ...prev,
+              [data.ambulance_id]: { ...prev[data.ambulance_id], position: data.position, progressPct: data.progressPct }
+            };
+          });
+        } else if (data.type === 'AMBULANCE_ARRIVED') {
+          setLiveAmbulances(prev => {
+            const next = { ...prev };
+            delete next[data.ambulance_id];
+            return next;
+          });
+        } else if (data.type === 'ML_UPDATE') {
+          setLiveMLStats(prev => ({
+            ...prev,
+            [data.device_id]: {
+              densityPct: data.densityPct,
+              activeVehicles: data.activeVehicles,
+              status: data.status,
+              message: data.message
+            }
+          }));
+        } else if (data.type === 'NEW_ALERT') {
+          setAlerts(prev => [data.alert, ...prev]);
+        }
+      } catch (e) {
+        console.error("WebSocket parse error", e);
+      }
+    };
+    
+    return () => ws.close();
+  }, []);
+
   const [activeMapElementId, setActiveMapElementId] = useState(null);
 
   // 4 Junction Approaches
@@ -62,6 +112,26 @@ export const TrafficProvider = ({ children }) => {
   // ---------------------------------------------------------------------------
   // Backend Integration: Fetch Junctions
   // ---------------------------------------------------------------------------
+  const [rawEquipmentList, setRawEquipmentList] = useState([]);
+
+  // Merge live ML stats into equipment
+  const equipmentList = useMemo(() => {
+    if (!liveMLStats || Object.keys(liveMLStats).length === 0) return rawEquipmentList;
+    return rawEquipmentList.map(eq => {
+      const live = liveMLStats[eq.device_id];
+      if (live) {
+        return {
+          ...eq,
+          status: live.status || eq.status,
+          live_vehicles: live.activeVehicles !== undefined ? live.activeVehicles : eq.live_vehicles,
+          density_pct: live.densityPct !== undefined ? live.densityPct : eq.density_pct,
+          ml_message: live.message
+        };
+      }
+      return eq;
+    });
+  }, [rawEquipmentList, liveMLStats]);
+
   const loadJunctions = async () => {
     try {
       const data = await fetchAPI('/junctions');
@@ -152,50 +222,7 @@ export const TrafficProvider = ({ children }) => {
   }, [selectedJunctionId]);
 
 
-  // ---------------------------------------------------------------------------
-  // Geolocation
-  // ---------------------------------------------------------------------------
-  const detectUserLocation = () => {
-    if (!navigator.geolocation) return;
-    setIsDetectingLocation(true);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        let minDistance = Infinity;
-        let nearestCity = null;
-        INDIAN_CITIES.forEach((city) => {
-          const dist = Math.hypot(city.center.lat - latitude, city.center.lng - longitude);
-          if (dist < minDistance) { minDistance = dist; nearestCity = city; }
-        });
-
-        if (nearestCity && minDistance < 3.5) {
-          setActiveCity({ ...nearestCity, name: `${nearestCity.name} (Your Location)` });
-          setCityCenter(nearestCity.center);
-        } else {
-          setActiveCity({ id: 'live', name: 'Detected Location', center: { lat: latitude, lng: longitude } });
-          setCityCenter({ lat: latitude, lng: longitude });
-        }
-        setUserLocationDetected(true);
-        setIsDetectingLocation(false);
-      },
-      (error) => {
-        setIsDetectingLocation(false);
-      }
-    );
-  };
-
-  useEffect(() => { detectUserLocation(); }, []);
-
-  const handleSelectCity = (cityObj) => {
-    setActiveCity(cityObj);
-    setCityCenter(cityObj.center);
-  };
-
-  const handleSearchCityQuery = async (queryText) => {
-    // keeping signature for compatibility
-    return null; 
-  };
 
   const handleSelectJunction = (juncName) => {
     setSelectedJunction(juncName);
@@ -296,11 +323,6 @@ export const TrafficProvider = ({ children }) => {
         
         activeCity,
         cityCenter,
-        handleSelectCity,
-        handleSearchCityQuery,
-        detectUserLocation,
-        userLocationDetected,
-        isDetectingLocation,
         
         selectedJunction,
         setSelectedJunction: handleSelectJunction,
@@ -317,6 +339,9 @@ export const TrafficProvider = ({ children }) => {
         activeCorridors,
         triggerEmergencyCorridor,
         removeEmergencyCorridor,
+        // Live Simulation Values
+        liveAmbulances,
+        liveMLStats,
         
         alerts,
         setAlerts,

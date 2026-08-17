@@ -47,17 +47,20 @@ export const CamerasSignalsView = () => {
 
   const filteredEquipment = useMemo(() => {
     return masterEquipmentList.filter((item) => {
+      const idParam = searchParams.get('id');
+      if (idParam && item.device_id !== idParam && item.id !== idParam) return false;
+      
       if (activeTabMode === 'CAMERAS' && item.deviceType !== 'CAMERA') return false;
       if (activeTabMode === 'SIGNALS' && item.deviceType !== 'SIGNAL') return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        if (!item.name.toLowerCase().includes(q) && !item.id.toLowerCase().includes(q) && !item.junction.toLowerCase().includes(q) && !item.cityName.toLowerCase().includes(q)) return false;
+        if (!item.name.toLowerCase().includes(q) && !(item.device_id || '').toLowerCase().includes(q) && !item.junction.toLowerCase().includes(q) && !item.cityName.toLowerCase().includes(q)) return false;
       }
       if (selectedJunctionFilter !== 'ALL' && item.junction !== selectedJunctionFilter) return false;
       if (signalColorFilter !== 'ALL' && item.deviceType === 'SIGNAL' && item.light !== signalColorFilter) return false;
       return true;
     });
-  }, [masterEquipmentList, activeTabMode, searchQuery, selectedJunctionFilter, signalColorFilter]);
+  }, [masterEquipmentList, activeTabMode, searchQuery, selectedJunctionFilter, signalColorFilter, searchParams]);
 
   const totalPages = Math.max(1, Math.ceil(filteredEquipment.length / ITEMS_PER_PAGE));
   const validPage  = Math.min(currentPage, totalPages);
@@ -78,7 +81,7 @@ export const CamerasSignalsView = () => {
   }, [masterEquipmentList]);
 
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newEq, setNewEq] = useState({ device_id: '', device_type: 'CAMERA', name: '', city_name: '', junction_id: '', junction_name: '', approach: 'North Approach', latitude: 0, longitude: 0 });
+  const [newEq, setNewEq] = useState({ device_id: '', device_type: 'CAMERA', name: '', city_name: 'Nagpur', junction_id: '', junction_name: '', approach: 'North Approach', latitude: 0, longitude: 0 });
 
   const handleAddEquipment = async (e) => {
     e.preventDefault();
@@ -107,6 +110,21 @@ export const CamerasSignalsView = () => {
 
   return (
     <div className="space-y-6 relative">
+      {searchParams.get('id') && (
+        <div className="bg-sky-50 border border-sky-200 text-sky-800 p-3 rounded-sm flex items-center justify-between">
+          <div className="text-sm">Viewing specific equipment: <strong>{searchParams.get('id')}</strong></div>
+          <button 
+            onClick={() => {
+              const p = new URLSearchParams(searchParams);
+              p.delete('id');
+              setSearchParams(p);
+            }} 
+            className="text-xs bg-white border border-sky-300 px-3 py-1 rounded cursor-pointer hover:bg-sky-100"
+          >
+            Clear Filter
+          </button>
+        </div>
+      )}
       
       {/* Add Equipment Modal */}
       {showAddModal && (
@@ -120,7 +138,7 @@ export const CamerasSignalsView = () => {
                 <option value="SIGNAL">Signal</option>
               </select>
               <input type="text" placeholder="Name (e.g. New North CCTV)" required value={newEq.name} onChange={e => setNewEq({...newEq, name: e.target.value})} className="w-full p-2 bg-(--color-5) border border-(--color-3) rounded text-sm"/>
-              <input type="text" placeholder="City Name" required value={newEq.city_name} onChange={e => setNewEq({...newEq, city_name: e.target.value})} className="w-full p-2 bg-(--color-5) border border-(--color-3) rounded text-sm"/>
+
               <input type="text" placeholder="Junction ID" required value={newEq.junction_id} onChange={e => setNewEq({...newEq, junction_id: e.target.value})} className="w-full p-2 bg-(--color-5) border border-(--color-3) rounded text-sm"/>
               <input type="text" placeholder="Junction Name" required value={newEq.junction_name} onChange={e => setNewEq({...newEq, junction_name: e.target.value})} className="w-full p-2 bg-(--color-5) border border-(--color-3) rounded text-sm"/>
               <input type="number" step="any" placeholder="Latitude" required value={newEq.latitude} onChange={e => setNewEq({...newEq, latitude: parseFloat(e.target.value)})} className="w-full p-2 bg-(--color-5) border border-(--color-3) rounded text-sm"/>
@@ -241,7 +259,7 @@ export const CamerasSignalsView = () => {
                     )}
                   </div>
                   <button
-                    onClick={() => { setSelectedJunction(item.junction); setActiveMapElementId(item.id); navigate('/dashboard'); }}
+                    onClick={() => { setSelectedJunction(item.junction); setActiveMapElementId(item.device_id); navigate('/dashboard?tab=overview'); }}
                     className="text-(--color-6) hover:bg-(--color-6)/10 p-1 rounded-sm transition-colors cursor-pointer flex items-center gap-1 text-xs"
                     title="Show on map"
                   >

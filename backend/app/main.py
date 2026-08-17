@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from app.ws.hub import manager
 
 from app.config import settings
 from app.routes import (
@@ -35,6 +36,17 @@ app.add_middleware(
 @app.get(f"{settings.api_v1_prefix}/health", tags=["Health"])
 def health_check() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.websocket(f"{settings.api_v1_prefix}/ws/live-dashboard")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            # We don't expect messages from client, but we need to keep connection open
+            data = await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
 
 app.include_router(junction_routes.router, prefix=settings.api_v1_prefix)

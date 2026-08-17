@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
     mongodb_uri: str = "mongodb://localhost:27017"
     mongodb_database: str = "adaptive_signal_intelligence"
-    cors_origins: list[str] = ["http://localhost:5173"]
+    cors_origins: list[str] = ["http://localhost:5173", "http://localhost:5174"]
     density_low_max: float = 20.0
     density_medium_max: float = 40.0
 
@@ -19,11 +19,11 @@ class Settings(BaseSettings):
     @classmethod
     def parse_cors_origins(cls, value):
         if value is None:
-            return ["http://localhost:5173"]
+            return ["http://localhost:5173", "http://localhost:5174"]
         if isinstance(value, str):
             value = value.strip()
             if not value:
-                return ["http://localhost:5173"]
+                return ["http://localhost:5173", "http://localhost:5174"]
             if value.startswith("["):
                 return json.loads(value)
             return [item.strip() for item in value.split(",") if item.strip()]

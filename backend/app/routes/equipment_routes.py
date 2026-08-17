@@ -10,7 +10,7 @@ from app.schemas.equipment_schema import EquipmentCreate, EquipmentResponse
 router = APIRouter(prefix="/equipment", tags=["Equipment"])
 
 
-@router.get("/", response_model=List[EquipmentResponse])
+@router.get("", response_model=List[EquipmentResponse])
 def get_equipment(
     junction_id: Optional[str] = Query(None, description="Filter by junction ID"),
     device_type: Optional[str] = Query(None, description="Filter by device type (CAMERA/SIGNAL)"),
@@ -23,7 +23,7 @@ def get_equipment(
     )
 
 
-@router.post("/", response_model=EquipmentResponse, status_code=201)
+@router.post("", response_model=EquipmentResponse, status_code=201)
 def add_equipment(
     equipment_data: EquipmentCreate,
     collection: Collection = Depends(get_equipment_collection)

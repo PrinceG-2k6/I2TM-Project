@@ -63,7 +63,7 @@ class TrafficMLPipeline:
 
     def __init__(
         self,
-        model_path: str = "models/best.pt",
+        model_path: str = "app/models/best_final.pt",
         settings: MLSettings | None = None,
         roboflow_api_key: str | None = None,
     ) -> None:

@@ -81,3 +81,179 @@ def get_simulation_dashboard(junction_id: str) -> dict[str, Any]:
         "generated_at": utc_now(),
     }
     return _to_serializable_value(payload)
+
+
+import asyncio
+import httpx
+from app.ws.hub import manager
+from app.models.risk_pattern_model import build_risk_pattern_document
+from app.database.connection import get_risk_pattern_collection, get_equipment_collection
+from app.ml.pipeline import TrafficMLPipeline
+
+async def simulate_video_processing(junction_id: str, device_id: str, video_path: str):
+    """Run real YOLO ML pipeline on video and update stats"""
+    import asyncio
+    import logging
+    from app.ws.hub import manager
+    from app.ml.pipeline import TrafficMLPipeline
+    import traceback
+    
+    logger = logging.getLogger(__name__)
+    
+    # Send initial status
+    await manager.broadcast({
+        "type": "ML_UPDATE", 
+        "device_id": device_id, 
+        "status": "PROCESSING",
+        "message": f"Starting YOLOv8 pipeline on {device_id}..."
+    })
+    
+    # Give event loop a moment to flush the status message to the websocket
+    await asyncio.sleep(0.5)
+    
+    try:
+        # Initialize pipeline in a background thread to prevent blocking event loop
+        # while downloading YOLO weights
+        def init_pipeline():
+            # Use user's trained model
+            p = TrafficMLPipeline(model_path="app/models/best_final.pt")
+            p.setup()
+            return p
+            
+        pipeline = await asyncio.to_thread(init_pipeline)
+        logger.info(f"TrafficMLPipeline initialized for {device_id}")
+        
+        frame_counter = 0
+        
+        logger.info(f"Running run_on_video for {video_path}...")
+        
+        # This will block a worker thread, but free the main event loop
+        # To stream real-time, we'd normally use an async queue between threads, 
+        # but for max_frames=50 it's fast enough to gather or yield periodically.
+        # Let's chunk the execution so we can stream it real-time!
+        
+        import threading
+        import queue
+        
+        q = queue.Queue()
+        
+        def run_pipeline():
+            try:
+                for res in pipeline.run_on_video(video_path, junction_id=junction_id, max_frames=None):
+                    q.put(("data", res))
+                q.put(("done", None))
+            except Exception as e:
+                q.put(("error", (e, traceback.format_exc())))
+                
+        thread = threading.Thread(target=run_pipeline)
+        thread.start()
+        
+        while True:
+            try:
+                # Non-blocking check
+                msg_type, payload = q.get_nowait()
+                
+                if msg_type == "data":
+                    await manager.broadcast({
+                        "type": "ML_DETECTION",
+                        "device_id": device_id,
+                        "junction_id": junction_id,
+                        "frame": frame_counter,
+                        "data": payload.model_dump(mode="json")
+                    })
+                    frame_counter += 1
+                elif msg_type == "done":
+                    break
+                elif msg_type == "error":
+                    raise payload[0]  # Reraise to outer try-catch
+                    
+            except queue.Empty:
+                # Yield to asyncio loop
+                await asyncio.sleep(0.1)
+                
+        await manager.broadcast({
+            "type": "ML_UPDATE",
+            "device_id": device_id,
+            "status": "COMPLETED",
+            "message": f"Processed {frame_counter} frames successfully."
+        })
+        logger.info(f"Video processing complete for {device_id}")
+    except Exception as e:
+        err_trace = traceback.format_exc()
+        logger.error(f"Error in simulate_video_processing: {e}\n{err_trace}")
+        await manager.broadcast({
+            "type": "ML_ERROR",
+            "device_id": device_id,
+            "error": str(e),
+            "traceback": err_trace
+        })
+
+
+async def simulate_ambulance_drive(origin: dict, destination: dict, ambulance_id: str):
+    """Calculate OSRM route and simulate driving along it"""
+    try:
+        url = f"https://router.project-osrm.org/route/v1/driving/{origin['lng']},{origin['lat']};{destination['lng']},{destination['lat']}?overview=full&geometries=geojson"
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(url)
+            data = resp.json()
+            
+        if not data.get("routes"):
+            return
+            
+        coords = data["routes"][0]["geometry"]["coordinates"]
+        
+        await manager.broadcast({
+            "type": "AMBULANCE_DISPATCH",
+            "ambulance_id": ambulance_id,
+            "route": coords,
+            "status": "DISPATCHED"
+        })
+        
+        # Simulate moving along the path
+        for i in range(len(coords)):
+            lng, lat = coords[i]
+            await manager.broadcast({
+                "type": "AMBULANCE_MOVE",
+                "ambulance_id": ambulance_id,
+                "position": {"lat": lat, "lng": lng},
+                "progressPct": int((i / len(coords)) * 100)
+            })
+            await asyncio.sleep(0.5) # Simulate speed
+            
+        await manager.broadcast({
+            "type": "AMBULANCE_ARRIVED",
+            "ambulance_id": ambulance_id
+        })
+    except Exception as e:
+        print(f"Ambulance simulation error: {e}")
+
+
+async def inject_anomaly(junction_id: str, device_id: str, anomaly_type: str):
+    """Instantly inject an anomaly into the DB and broadcast it"""
+    doc = build_risk_pattern_document({
+        "junction_id": junction_id,
+        "device_id": device_id,
+        "pattern_type": anomaly_type,
+        "severity": "CRITICAL",
+        "description": f"Simulated anomaly ({anomaly_type}) detected from uploaded video",
+        "action_taken": "Alerted Traffic Marshal"
+    })
+    get_risk_pattern_collection().insert_one(doc)
+    
+    # Fetch equipment to get city name or location
+    eq = get_equipment_collection().find_one({"device_id": device_id})
+    location = eq.get("name", "Unknown Location") if eq else "Unknown Location"
+    
+    # Broadcast to Live Feed
+    await manager.broadcast({
+        "type": "NEW_ALERT",
+        "alert": {
+            "id": str(doc["_id"]),
+            "time": doc["timestamp"].strftime("%H:%M:%S"),
+            "title": f"Anomaly Detected: {anomaly_type}",
+            "description": doc["description"],
+            "severity": doc["severity"],
+            "type": "RISKY_MOVEMENT",
+            "feature": location
+        }
+    })

@@ -11,92 +11,12 @@
 // ---------------------------------------------------------------------------
 export const INDIAN_CITIES = [
   {
-    id: 'delhi',
-    name: 'New Delhi',
-    state: 'Delhi NCR',
-    center: { lat: 28.5672, lng: 77.2100 },
-    zoom: 14,
-    junctions: ['J-04 Ring Road South (AIIMS)', 'J-01 Connaught Inner', 'J-02 Aurobindo Marg Node']
-  },
-  {
-    id: 'mumbai',
-    name: 'Mumbai',
+    id: 'nagpur',
+    name: 'Nagpur',
     state: 'Maharashtra',
-    center: { lat: 19.0657, lng: 72.8686 },
+    center: { lat: 21.1534, lng: 79.0889 }, // Sitabuldi Interchange
     zoom: 14,
-    junctions: ['M-01 BKC Central Junction', 'M-02 Dadar TT Circle', 'M-03 Marine Drive Flyover']
-  },
-  {
-    id: 'bengaluru',
-    name: 'Bengaluru',
-    state: 'Karnataka',
-    center: { lat: 12.9172, lng: 77.6228 },
-    zoom: 14,
-    junctions: ['B-01 Silk Board Node', 'B-02 HSR Outer Ring Road', 'B-03 Electronic City Toll']
-  },
-  {
-    id: 'hyderabad',
-    name: 'Hyderabad',
-    state: 'Telangana',
-    center: { lat: 17.4435, lng: 78.3772 },
-    zoom: 14,
-    junctions: ['H-01 Hitec City Cyber Towers', 'H-02 Gachibowli Junction', 'H-03 Punjagutta Flyover']
-  },
-  {
-    id: 'chennai',
-    name: 'Chennai',
-    state: 'Tamil Nadu',
-    center: { lat: 13.0067, lng: 80.2022 },
-    zoom: 14,
-    junctions: ['C-01 Kathipara Cloverleaf Node', 'C-02 Anna Salai Arterial', 'C-03 T Nagar Bus Terminus']
-  },
-  {
-    id: 'kolkata',
-    name: 'Kolkata',
-    state: 'West Bengal',
-    center: { lat: 22.5726, lng: 88.3639 },
-    zoom: 14,
-    junctions: ['K-01 Park Street Junction', 'K-02 Salt Lake Sector V Hub', 'K-03 Howrah Bridge Approach']
-  },
-  {
-    id: 'pune',
-    name: 'Pune',
-    state: 'Maharashtra',
-    center: { lat: 18.5308, lng: 73.8474 },
-    zoom: 14,
-    junctions: ['P-01 University Circle Hub', 'P-02 Hinjawadi Phase 1 Circle', 'P-03 Swargate Bus Terminal']
-  },
-  {
-    id: 'ahmedabad',
-    name: 'Ahmedabad',
-    state: 'Gujarat',
-    center: { lat: 23.0225, lng: 72.5714 },
-    zoom: 14,
-    junctions: ['A-01 SG Highway Iskcon Circle', 'A-02 Ashram Road Node', 'A-03 Kalupur Station Circle']
-  },
-  {
-    id: 'jaipur',
-    name: 'Jaipur',
-    state: 'Rajasthan',
-    center: { lat: 26.9124, lng: 75.7873 },
-    zoom: 14,
-    junctions: ['JPR-01 Statue Circle Hub', 'JPR-02 MI Road Junction', 'JPR-03 Ashram Marg Node']
-  },
-  {
-    id: 'chandigarh',
-    name: 'Chandigarh',
-    state: 'Punjab / Haryana',
-    center: { lat: 30.7333, lng: 76.7794 },
-    zoom: 14,
-    junctions: ['CH-01 Tribune Chowk Node', 'CH-02 Sector 17 Plaza Circle', 'CH-03 Press Chowk Junction']
-  },
-  {
-    id: 'lucknow',
-    name: 'Lucknow',
-    state: 'Uttar Pradesh',
-    center: { lat: 26.8467, lng: 80.9462 },
-    zoom: 14,
-    junctions: ['LKO-01 Hazratganj Central Cross', 'LKO-02 Polytechnic Chauraha', 'LKO-03 Awadh Chauraha Node']
+    junctions: []
   }
 ];
 
@@ -149,132 +69,23 @@ export const DEFAULT_PATH_NODES = [
 //    Uncomment to pre-populate; leave commented for empty state.
 // ---------------------------------------------------------------------------
 export const INITIAL_APPROACHES = {
-  North: { name: 'North Approach Corridor',  vehicleCount: 42, capacity: 50, densityPct: 84.0, status: 'HIGH',     currentLight: 'RED',   greenSec: 35, avgSpeed: 18.2 },
-  South: { name: 'South Flyover Connector',  vehicleCount: 21, capacity: 50, densityPct: 42.0, status: 'MEDIUM',   currentLight: 'RED',   greenSec: 25, avgSpeed: 34.0 },
-  East:  { name: 'East Commercial Arterial', vehicleCount: 48, capacity: 50, densityPct: 96.0, status: 'CRITICAL', currentLight: 'GREEN', greenSec: 55, avgSpeed: 9.5  },
-  West:  { name: 'West Residential Feeder',  vehicleCount: 12, capacity: 50, densityPct: 24.0, status: 'LOW',      currentLight: 'RED',   greenSec: 15, avgSpeed: 42.1 }
+  North: { name: 'North Approach Corridor',  vehicleCount: 0, capacity: 50, densityPct: 0.0, status: 'LOW', currentLight: 'RED',   greenSec: 0, avgSpeed: 0.0 },
+  South: { name: 'South Flyover Connector',  vehicleCount: 0, capacity: 50, densityPct: 0.0, status: 'LOW', currentLight: 'RED',   greenSec: 0, avgSpeed: 0.0 },
+  East:  { name: 'East Commercial Arterial', vehicleCount: 0, capacity: 50, densityPct: 0.0, status: 'LOW', currentLight: 'RED',   greenSec: 0, avgSpeed: 0.0 },
+  West:  { name: 'West Residential Feeder',  vehicleCount: 0, capacity: 50, densityPct: 0.0, status: 'LOW', currentLight: 'RED',   greenSec: 0, avgSpeed: 0.0 }
 };
 
 // ---------------------------------------------------------------------------
 // 5. INITIAL CORRIDORS — Pre-seeded green corridor(s)
 //    Uncomment to pre-populate; leave commented for empty state.
 // ---------------------------------------------------------------------------
-export const INITIAL_CORRIDORS = [
-  {
-    id: 'CORR-INIT89',
-    active: true,
-    status: 'IN_TRANSIT',
-    vehicleType: 'AMBULANCE',
-    vehicleLabel: 'Ambulance',
-    vehicleIcon: 'Siren',
-    vehicleId: 'DL-01-AMB-889',
-    patientSeverity: 'CRITICAL',
-    triageLevel: 'RED',
-    etaSeconds: 120,
-    countdownSeconds: 95,
-    destination: 'Local Trauma Center',
-    origin: 'Outer Ring Corridor',
-    distanceMeters: 850,
-    routeCongestionPct: 88.0,
-    roadsideMessage: 'Ambulance approaching. Keep left lane clear.',
-    targetApproach: 'East Commercial Arterial',
-    originPos: { lat: 28.5592, lng: 77.2088 }, // Absolute coordinates for demo
-    destPos: { lat: 28.5678, lng: 77.2108 },
-    pathPoints: [], // Filled dynamically if needed
-    pathNodes: [
-      { name: 'Outer Ring Entry',    status: 'PASSED',   isGreen: true },
-      { name: 'Commercial Arterial', status: 'ACTIVE',   isGreen: true },
-      { name: 'City Center Node',    status: 'UPCOMING', isGreen: true },
-      { name: 'Hospital Approach',   status: 'UPCOMING', isGreen: true }
-    ],
-    progressPct: 20
-  }
-];
+export const INITIAL_CORRIDORS = [];
 
 // ---------------------------------------------------------------------------
 // 6. INITIAL ALERTS — Pre-seeded incident feed
 //    Uncomment to pre-populate; leave commented for empty state.
 // ---------------------------------------------------------------------------
-export const INITIAL_ALERTS = [
-  {
-    id: 'ALT-101',
-    time: '14:23:13',
-    title: 'Density spike detected on East Arterial. Traffic shed requested.',
-    description: 'Density reached 96% with queue spilling beyond 280m. Adaptive green extended by +25s.',
-    severity: 'CRITICAL',
-    type: 'CONGESTION',
-    author: 'System',
-    role: 'System',
-    feature: 'Internal Reports',
-    service: 'Vision Density Detector',
-    tags: ['System', 'Feature', 'Admin Dashboard']
-  },
-  {
-    id: 'ALT-102',
-    time: '14:21:40',
-    title: 'Lane Cut Guard triggered: erratic swerve pattern detected.',
-    description: 'Vehicle performed abrupt 38° lane swerve across 3 lanes at 58 km/h. Traffic marshal alert dispatched.',
-    severity: 'WARNING',
-    type: 'RISKY_MOVEMENT',
-    author: 'Toby',
-    role: 'Vision ML',
-    feature: 'Lane Cut Guard',
-    service: 'Vision Trajectory Interceptor',
-    tags: ['Vision AI', 'Security']
-  },
-  {
-    id: 'ALT-103',
-    time: '14:18:05',
-    title: 'Signal timing automatically recalibrated for city flow.',
-    description: 'Density approached 75%. Signal timing dynamically optimized.',
-    severity: 'HEALTHY',
-    type: 'SYSTEM',
-    author: 'AI Dispatch',
-    role: 'System',
-    feature: 'Signal Timing Engine',
-    service: 'Dynamic Signal Optimizer',
-    tags: ['System', 'Optimization']
-  },
-  {
-    id: 'ALT-104',
-    time: '14:15:30',
-    title: 'Wrong-way vehicle detected on North Approach flyover.',
-    description: 'AI camera flagged vehicle travelling against traffic flow at 42 km/h. Alert relayed to traffic marshal unit.',
-    severity: 'CRITICAL',
-    type: 'RISKY_MOVEMENT',
-    author: 'Toby',
-    role: 'Vision ML',
-    feature: 'Wrong-Way Guard',
-    service: 'Vision Trajectory Interceptor',
-    tags: ['Vision AI', 'Security', 'Critical']
-  },
-  {
-    id: 'ALT-105',
-    time: '14:11:58',
-    title: 'VMS Roadside Display Board updated with congestion advisory.',
-    description: 'Board J-04 (Ring Road South) now showing: "Heavy congestion ahead. Use alternate route via West Feeder."',
-    severity: 'HEALTHY',
-    type: 'SIGNAL',
-    author: 'AI Dispatch',
-    role: 'System',
-    feature: 'Roadside Display Board',
-    service: 'Dynamic Signal Optimizer',
-    tags: ['System', 'VMS']
-  },
-  {
-    id: 'ALT-106',
-    time: '14:08:22',
-    title: 'Signal override applied: West Residential Feeder green extended.',
-    description: 'Adaptive control extended green phase by +18s on West approach to balance queue buildup detected by camera array.',
-    severity: 'WARNING',
-    type: 'SIGNAL',
-    author: 'System',
-    role: 'System',
-    feature: 'Signal Timing Engine',
-    service: 'Dynamic Signal Optimizer',
-    tags: ['System', 'Optimization', 'Signal']
-  }
-];
+export const INITIAL_ALERTS = [];
 
 
 // ---------------------------------------------------------------------------
@@ -300,7 +111,13 @@ export const MAP_OPTIONS = {
     { featureType: 'road',                elementType: 'geometry',        stylers: [{ color: '#304a7d' }] },
     { featureType: 'road',                elementType: 'geometry.stroke', stylers: [{ color: '#1f2835' }] },
     { featureType: 'road.highway',        elementType: 'geometry',        stylers: [{ color: '#2c456b' }] },
-    { featureType: 'water',               elementType: 'geometry',        stylers: [{ color: '#0e1626' }] }
+    { featureType: 'road.highway',        elementType: 'labels',          stylers: [{ visibility: 'on' }] },
+    { featureType: 'water',               elementType: 'geometry',        stylers: [{ color: '#0e1626' }] },
+    { featureType: 'poi',                 elementType: 'labels',          stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi.medical',         elementType: 'labels',          stylers: [{ visibility: 'on' }] },
+    { featureType: 'poi.school',          elementType: 'labels',          stylers: [{ visibility: 'on' }] },
+    { featureType: 'poi.government',      elementType: 'labels',          stylers: [{ visibility: 'on' }] },
+    { featureType: 'transit',             elementType: 'labels',          stylers: [{ visibility: 'off' }] }
   ]
 };
 
@@ -337,7 +154,7 @@ export const generateOverviewStats = (approaches, emergency, alerts) => {
   const activeIncidents = alerts?.length || 0;
   const emergencyUnits  = emergency?.active ? 3 : 0;
   const ambulancesEnRoute = emergency?.active ? 1 : 0;
-  const coveragePct     = appArr.length ? 50 : 0;
+  const coveragePct     = 0;
 
   return [
     {
@@ -346,7 +163,7 @@ export const generateOverviewStats = (approaches, emergency, alerts) => {
       value: networkRisk,
       max: 100,
       unit: '/100',
-      sub: 'Weighted across 16 junctions',
+      sub: 'Weighted across active junctions',
       color:  networkRisk >= 70 ? '#DC2626' : networkRisk >= 50 ? '#F59E0B' : '#16A34A',
       bg:     networkRisk >= 70 ? '#FEF2F2' : networkRisk >= 50 ? '#FFFBEB' : '#F0FDF4',
       border: networkRisk >= 70 ? '#FCA5A5' : networkRisk >= 50 ? '#FCD34D' : '#86EFAC',
@@ -409,7 +226,7 @@ export const generateOverviewStats = (approaches, emergency, alerts) => {
       value: coveragePct,
       max: 100,
       unit: '%',
-      sub: '16 nodes monitored',
+      sub: 'Active nodes monitored',
       color: '#16A34A', bg: '#F0FDF4', border: '#86EFAC',
       isScore: true
     }

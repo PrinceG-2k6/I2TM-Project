@@ -37,9 +37,8 @@ class YOLODetector:
         imgsz: int = 640,
         device: str = "auto"
     ):
-        if not os.path.exists(model_path):
-            logger.error(f"Model file not found: {model_path}")
-            raise FileNotFoundError(f"YOLO model file not found at {model_path}")
+        # We let ultralytics handle model existence check, 
+        # as it can auto-download standard models like yolov8n.pt
 
         self.model_path = model_path
         self.confidence = confidence
@@ -62,19 +61,6 @@ class YOLODetector:
         self.enable_roboflow = False
         self.roboflow_model = None
 
-    def setup_roboflow(self, api_key: str, model_id: str = "indian-emergency-vehicles-bceta/1") -> None:
-        try:
-            from inference import get_model
-            logger.info(f"Downloading/loading Roboflow model {model_id} locally...")
-            self.roboflow_model = get_model(
-                model_id=model_id, 
-                api_key=api_key
-            )
-            self.enable_roboflow = True
-            logger.info("Roboflow secondary model initialized successfully.")
-        except Exception as e:
-            logger.error(f"Failed to load Roboflow model: {e}")
-
         logger.info(f"Loading YOLO model from {model_path} on device {self._device}")
         try:
             self.model = YOLO(model_path)
@@ -90,6 +76,19 @@ class YOLODetector:
             f"Loaded YOLO model. Type: {self.model.task}, "
             f"Classes: {len(self.model.names)} ({'Single-class' if self._is_single_class else 'Multi-class'})"
         )
+
+    def setup_roboflow(self, api_key: str, model_id: str = "indian-emergency-vehicles-bceta/1") -> None:
+        try:
+            from inference import get_model
+            logger.info(f"Downloading/loading Roboflow model {model_id} locally...")
+            self.roboflow_model = get_model(
+                model_id=model_id, 
+                api_key=api_key
+            )
+            self.enable_roboflow = True
+            logger.info("Roboflow secondary model initialized successfully.")
+        except Exception as e:
+            logger.error(f"Failed to load Roboflow model: {e}")
 
     def _get_centroid(self, x1: int, y1: int, x2: int, y2: int) -> Tuple[float, float]:
         return (x1 + x2) / 2.0, (y1 + y2) / 2.0
