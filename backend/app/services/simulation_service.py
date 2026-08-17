@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 from typing import Any
+import asyncio
+import httpx
 
 from app.services import congestion_service, density_service, traffic_service
 from app.simulation.traffic_simulator import TrafficScenario, generate_traffic_observation

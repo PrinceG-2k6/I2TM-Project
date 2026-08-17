@@ -110,9 +110,22 @@ export const OverviewView = () => {
   const onLoadMap = useCallback((map) => { mapRef.current = map; }, []);
   const onUnmountMap = useCallback(() => { mapRef.current = null; }, []);
 
-  const centerLat = cityCenter?.lat || INDIAN_CITIES[0].center.lat;
-  const centerLng = cityCenter?.lng || INDIAN_CITIES[0].center.lng;
-  const mapCenter = useMemo(() => ({ lat: centerLat, lng: centerLng }), [centerLat, centerLng]);
+  const [mapCenter, setMapCenter] = useState({ lat: 21.1458, lng: 79.0882 });
+
+  useEffect(() => {
+    if (cityCenter) {
+      setMapCenter(cityCenter);
+    }
+  }, [cityCenter]);
+
+  const onDragEnd = useCallback(() => {
+    if (mapRef.current) {
+      const newCenter = mapRef.current.getCenter();
+      if (newCenter) {
+        setMapCenter({ lat: newCenter.lat(), lng: newCenter.lng() });
+      }
+    }
+  }, []);
 
   // Smoothly pan map when city changes
   useEffect(() => {
@@ -205,12 +218,14 @@ export const OverviewView = () => {
   }, [junctions, selectedJunction]);
 
   // Pan to selected junction on change
+  const pannedJunctionRef = useRef(null);
   useEffect(() => {
     if (!selectedJunction || !mapRef.current) return;
     const targetJunc = junctions.find((j) => j.name === selectedJunction);
-    if (targetJunc) { 
+    if (targetJunc && targetJunc.name !== pannedJunctionRef.current) { 
       mapRef.current.panTo({ lat: targetJunc.latitude, lng: targetJunc.longitude }); 
       mapRef.current.setZoom(16); 
+      pannedJunctionRef.current = targetJunc.name;
     }
   }, [selectedJunction, junctions]);
 
@@ -283,16 +298,7 @@ export const OverviewView = () => {
       {/* Real-time Moving Ambulances via WebSockets */}
       {showCorridor && Object.entries(liveAmbulances || {}).map(([id, amb]) => (
         <React.Fragment key={`live-amb-${id}`}>
-          {amb.route && amb.route.length > 0 && (
-            <PolylineF
-              path={amb.route.map(pt => ({ lat: pt[1], lng: pt[0] }))}
-              options={{
-                strokeColor: '#22c55e',
-                strokeOpacity: 0.8,
-                strokeWeight: 6,
-              }}
-            />
-          )}
+
           {amb.position && (
             <MarkerF
               position={{ lat: amb.position.lat, lng: amb.position.lng }}
@@ -553,7 +559,7 @@ export const OverviewView = () => {
             </div>
           )}
           {isLoaded ? (
-            <GoogleMap mapContainerStyle={MAP_CONTAINER_STYLE} center={mapCenter} zoom={14} options={MAP_OPTIONS} onLoad={onLoadMap} onUnmount={onUnmountMap}>
+            <GoogleMap mapContainerStyle={MAP_CONTAINER_STYLE} center={mapCenter} zoom={14} options={MAP_OPTIONS} onLoad={onLoadMap} onUnmount={onUnmountMap} onDragEnd={onDragEnd}>
               {renderMapContent()}
             </GoogleMap>
           ) : (

@@ -14,6 +14,18 @@ function App() {
   const [backendEvents, setBackendEvents] = useState([])
   const wsRef = useRef(null)
 
+  const [aggregateStats, setAggregateStats] = useState({
+    totalFrames: 0,
+    maxCars: 0,
+    maxTrucks: 0,
+    maxBuses: 0,
+    maxBikes: 0,
+    anomaliesDetected: 0,
+    avgProcessingTime: 0,
+    latestCongestion: 'NORMAL',
+    maxCongestionScore: 0
+  })
+
   useEffect(() => {
     if (!junctionId) return;
 
@@ -34,6 +46,23 @@ function App() {
           const data = JSON.parse(event.data)
           if (data.type) {
             setBackendEvents(prev => [{ timestamp: new Date().toLocaleTimeString(), ...data }, ...prev].slice(0, 50))
+            
+            if (data.type === 'ML_DETECTION' && data.data) {
+               const stats = data.data.aggregate_stats || {};
+               const counts = stats.total_by_class || {};
+               const meta = data.data.frame_metadata || {};
+               setAggregateStats(prev => ({
+                  totalFrames: prev.totalFrames + 1,
+                  maxCars: Math.max(prev.maxCars, counts.cars || 0),
+                  maxTrucks: Math.max(prev.maxTrucks, counts.trucks || 0),
+                  maxBuses: Math.max(prev.maxBuses, counts.buses || 0),
+                  maxBikes: Math.max(prev.maxBikes, counts.motorcycles || 0),
+                  anomaliesDetected: prev.anomaliesDetected + (data.data.anomalies?.length || 0),
+                  avgProcessingTime: prev.totalFrames === 0 ? (meta.total_processing_time_ms || 0) : Math.round((prev.avgProcessingTime * prev.totalFrames + (meta.total_processing_time_ms || 0)) / (prev.totalFrames + 1)),
+                  latestCongestion: stats.overall_congestion_level || prev.latestCongestion,
+                  maxCongestionScore: Math.max(prev.maxCongestionScore, stats.overall_congestion_score || 0)
+               }))
+            }
           }
         } catch (e) {
           // ignore
@@ -58,7 +87,11 @@ function App() {
       isMounted = false;
       if (ws) {
         ws.onclose = null; // Prevent reconnect loop on unmount
-        ws.close();
+        if (ws.readyState === 1) { // OPEN
+          ws.close();
+        } else if (ws.readyState === 0) { // CONNECTING
+          ws.onopen = () => ws.close();
+        }
       }
     }
   }, [junctionId])
@@ -323,92 +356,165 @@ function App() {
           </div>
         </div>
 
-        {/* Real-time backend stream log */}
-        <div className="mt-6 bg-slate-950 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
-          <div className="bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between">
-            <h3 className="font-medium text-slate-300 flex items-center gap-2">
-              <Database size={18} className="text-blue-500" />
-              Live Output Stream
-            </h3>
-            <span className="text-xs font-mono px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20">WebSocket Connected</span>
-          </div>
-          <div className="p-4 h-80 overflow-y-auto font-mono text-xs text-slate-400 space-y-2">
-            {backendEvents.length === 0 ? (
-              <div className="text-center text-slate-600 py-10 italic">Waiting for simulation events...</div>
-            ) : (
-              backendEvents.map((evt, idx) => {
-                if (evt.type === 'ML_DETECTION' && evt.data) {
-                  const data = evt.data;
-                  const stats = data.aggregate_stats || {};
-                  const counts = stats.total_by_class || {};
-                  const metadata = data.frame_metadata || {};
-                  const congestion = stats.overall_congestion_level || 'UNKNOWN';
-                  const congestionColors = {
-                    LOW: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-                    MEDIUM: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
-                    HIGH: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
-                    CRITICAL: 'text-red-400 bg-red-500/10 border-red-500/20'
-                  };
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Real-time backend stream log */}
+          <div className="lg:col-span-2 bg-slate-950 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col">
+            <div className="bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between shrink-0">
+              <h3 className="font-medium text-slate-300 flex items-center gap-2">
+                <Database size={18} className="text-blue-500" />
+                Live Output Stream
+              </h3>
+              <span className="text-xs font-mono px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20">WebSocket Connected</span>
+            </div>
+            <div className="p-4 h-[500px] overflow-y-auto font-mono text-xs text-slate-400 space-y-2 custom-scrollbar">
+              {backendEvents.length === 0 ? (
+                <div className="text-center text-slate-600 py-10 italic">Waiting for simulation events...</div>
+              ) : (
+                backendEvents.map((evt, idx) => {
+                  if (evt.type === 'ML_DETECTION' && evt.data) {
+                    const data = evt.data;
+                    const stats = data.aggregate_stats || {};
+                    const counts = stats.total_by_class || {};
+                    const metadata = data.frame_metadata || {};
+                    const congestion = stats.overall_congestion_level || 'UNKNOWN';
+                    const congestionColors = {
+                      LOW: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+                      MEDIUM: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
+                      HIGH: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
+                      CRITICAL: 'text-red-400 bg-red-500/10 border-red-500/20'
+                    };
+
+                    return (
+                      <div key={idx} className="bg-slate-900 p-4 rounded-xl border border-slate-700 animate-in fade-in slide-in-from-top-2 shadow-sm">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <div className="text-blue-400 font-bold flex items-center gap-2">
+                              YOLO Frame #{data.frame_id || evt.frame}
+                              <span className="text-xs text-slate-500 font-normal">[{evt.timestamp}]</span>
+                            </div>
+                            <div className="text-slate-400 text-xs mt-1">Processing: {metadata.total_processing_time_ms || 0}ms</div>
+                          </div>
+                          <div className={`px-3 py-1 rounded-full border text-xs font-bold ${congestionColors[congestion] || 'text-slate-400 bg-slate-800'}`}>
+                            {congestion} Traffic ({(stats.overall_congestion_score || 0).toFixed(2)})
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-2 mb-3">
+                          <div className="bg-slate-800 rounded-lg p-2 text-center">
+                            <div className="text-slate-400 text-xs uppercase">Cars</div>
+                            <div className="text-white font-bold text-lg">{counts.cars || 0}</div>
+                          </div>
+                          <div className="bg-slate-800 rounded-lg p-2 text-center">
+                            <div className="text-slate-400 text-xs uppercase">Bikes</div>
+                            <div className="text-white font-bold text-lg">{counts.motorcycles || 0}</div>
+                          </div>
+                          <div className="bg-slate-800 rounded-lg p-2 text-center">
+                            <div className="text-slate-400 text-xs uppercase">Buses</div>
+                            <div className="text-white font-bold text-lg">{counts.buses || 0}</div>
+                          </div>
+                          <div className="bg-slate-800 rounded-lg p-2 text-center">
+                            <div className="text-slate-400 text-xs uppercase">Trucks</div>
+                            <div className="text-white font-bold text-lg">{counts.trucks || 0}</div>
+                          </div>
+                        </div>
+
+                        {data.anomalies && data.anomalies.length > 0 && (
+                          <div className="mt-2 p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
+                            <div className="text-red-400 text-xs font-bold uppercase mb-1">Anomalies Detected ({data.anomalies.length})</div>
+                            <ul className="text-slate-300 text-xs list-disc list-inside">
+                              {data.anomalies.map((a, i) => <li key={i}>{a.anomaly_type} (Risk: {a.risk_score.toFixed(2)})</li>)}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
 
                   return (
-                    <div key={idx} className="bg-slate-900 p-4 rounded-xl border border-slate-700 animate-in fade-in slide-in-from-top-2 shadow-sm">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <div className="text-blue-400 font-bold flex items-center gap-2">
-                            YOLO Frame #{data.frame_id || evt.frame}
-                            <span className="text-xs text-slate-500 font-normal">[{evt.timestamp}]</span>
-                          </div>
-                          <div className="text-slate-400 text-xs mt-1">Processing: {metadata.total_processing_time_ms || 0}ms</div>
-                        </div>
-                        <div className={`px-3 py-1 rounded-full border text-xs font-bold ${congestionColors[congestion] || 'text-slate-400 bg-slate-800'}`}>
-                          {congestion} Traffic ({(stats.overall_congestion_score || 0).toFixed(2)})
-                        </div>
+                    <div key={idx} className="bg-slate-900 p-3 rounded border border-slate-800 animate-in fade-in slide-in-from-top-2">
+                      <div className="text-blue-400 mb-1 flex justify-between">
+                        <span>[{evt.timestamp}] <span className="text-white font-bold">{evt.type}</span></span>
+                        {evt.device_id && <span className="text-slate-500">{evt.device_id}</span>}
                       </div>
-
-                      <div className="grid grid-cols-4 gap-2 mb-3">
-                        <div className="bg-slate-800 rounded-lg p-2 text-center">
-                          <div className="text-slate-400 text-xs uppercase">Cars</div>
-                          <div className="text-white font-bold text-lg">{counts.cars || 0}</div>
-                        </div>
-                        <div className="bg-slate-800 rounded-lg p-2 text-center">
-                          <div className="text-slate-400 text-xs uppercase">Bikes</div>
-                          <div className="text-white font-bold text-lg">{counts.motorcycles || 0}</div>
-                        </div>
-                        <div className="bg-slate-800 rounded-lg p-2 text-center">
-                          <div className="text-slate-400 text-xs uppercase">Buses</div>
-                          <div className="text-white font-bold text-lg">{counts.buses || 0}</div>
-                        </div>
-                        <div className="bg-slate-800 rounded-lg p-2 text-center">
-                          <div className="text-slate-400 text-xs uppercase">Trucks</div>
-                          <div className="text-white font-bold text-lg">{counts.trucks || 0}</div>
-                        </div>
-                      </div>
-
-                      {data.anomalies && data.anomalies.length > 0 && (
-                        <div className="mt-2 p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
-                          <div className="text-red-400 text-xs font-bold uppercase mb-1">Anomalies Detected ({data.anomalies.length})</div>
-                          <ul className="text-slate-300 text-xs list-disc list-inside">
-                            {data.anomalies.map((a, i) => <li key={i}>{a.anomaly_type} (Risk: {a.risk_score.toFixed(2)})</li>)}
-                          </ul>
-                        </div>
-                      )}
+                      <pre className="overflow-x-auto text-emerald-300/80">
+                        {JSON.stringify(evt.data || evt.message || evt, null, 2)}
+                      </pre>
                     </div>
                   );
-                }
+                })
+              )}
+            </div>
+          </div>
+          
+          {/* Aggregate Stats Sidebar */}
+          <div className="lg:col-span-1 bg-slate-800 rounded-2xl border border-slate-700 shadow-xl p-6 flex flex-col h-[565px]">
+            <h3 className="font-bold text-lg text-white mb-6 flex items-center gap-2">
+              <Activity size={20} className="text-purple-400" />
+              Aggregated Metrics
+            </h3>
+            
+            <div className="space-y-6 overflow-y-auto custom-scrollbar pr-2 flex-1">
+              <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                <div className="text-slate-400 text-sm mb-1">Video Frames Processed</div>
+                <div className="text-3xl font-black text-white">{aggregateStats.totalFrames}</div>
+                <div className="text-emerald-400 text-xs mt-1">Avg {aggregateStats.avgProcessingTime}ms/frame</div>
+              </div>
 
-                return (
-                  <div key={idx} className="bg-slate-900 p-3 rounded border border-slate-800 animate-in fade-in slide-in-from-top-2">
-                    <div className="text-blue-400 mb-1 flex justify-between">
-                      <span>[{evt.timestamp}] <span className="text-white font-bold">{evt.type}</span></span>
-                      {evt.device_id && <span className="text-slate-500">{evt.device_id}</span>}
-                    </div>
-                    <pre className="overflow-x-auto text-emerald-300/80">
-                      {JSON.stringify(evt.data || evt, null, 2)}
-                    </pre>
+              <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                <div className="text-slate-400 text-sm mb-3">Peak Vehicle Density</div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="text-center bg-slate-800 rounded p-2 border border-slate-700">
+                    <div className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Max Cars</div>
+                    <div className="text-xl font-bold text-white mt-1">{aggregateStats.maxCars}</div>
                   </div>
-                );
-              })
-            )}
+                  <div className="text-center bg-slate-800 rounded p-2 border border-slate-700">
+                    <div className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Max Trucks</div>
+                    <div className="text-xl font-bold text-white mt-1">{aggregateStats.maxTrucks}</div>
+                  </div>
+                  <div className="text-center bg-slate-800 rounded p-2 border border-slate-700">
+                    <div className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Max Buses</div>
+                    <div className="text-xl font-bold text-white mt-1">{aggregateStats.maxBuses}</div>
+                  </div>
+                  <div className="text-center bg-slate-800 rounded p-2 border border-slate-700">
+                    <div className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Max Bikes</div>
+                    <div className="text-xl font-bold text-white mt-1">{aggregateStats.maxBikes}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                <div className="text-slate-400 text-sm mb-1">Overall Congestion</div>
+                <div className="flex items-end gap-3 mt-2">
+                  <div className={`text-2xl font-black ${
+                    aggregateStats.latestCongestion === 'CRITICAL' ? 'text-red-500' :
+                    aggregateStats.latestCongestion === 'HIGH' ? 'text-orange-500' :
+                    aggregateStats.latestCongestion === 'MEDIUM' ? 'text-yellow-500' :
+                    'text-emerald-500'
+                  }`}>
+                    {aggregateStats.latestCongestion}
+                  </div>
+                  <div className="text-slate-500 text-xs mb-1">Max Score: {aggregateStats.maxCongestionScore.toFixed(2)}</div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                <div className="text-slate-400 text-sm mb-1">Anomalies Logged</div>
+                <div className="flex items-center gap-2 mt-1">
+                  <AlertTriangle size={24} className={aggregateStats.anomaliesDetected > 0 ? 'text-red-500' : 'text-slate-600'} />
+                  <span className="text-3xl font-black text-white">{aggregateStats.anomaliesDetected}</span>
+                </div>
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => setAggregateStats({
+                totalFrames: 0, maxCars: 0, maxTrucks: 0, maxBuses: 0, maxBikes: 0, 
+                anomaliesDetected: 0, avgProcessingTime: 0, latestCongestion: 'NORMAL', maxCongestionScore: 0
+              })}
+              className="mt-4 w-full py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-slate-600"
+            >
+              Reset Metrics
+            </button>
           </div>
         </div>
       </div>

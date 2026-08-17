@@ -72,7 +72,10 @@ export const AiInsightsView = () => {
       
       setHistoryData(data || []);
     } catch(e) {
-      console.error(`Failed to fetch history for ${type}`, e);
+      // Suppress console spam for expected 404s when data hasn't been generated yet
+      if (!e.message || (!e.message.toLowerCase().includes('not found') && !e.message.includes('404'))) {
+        console.error(`Failed to fetch history for ${type}`, e);
+      }
       setHistoryData([]);
     } finally {
       setLoadingHistory(false);

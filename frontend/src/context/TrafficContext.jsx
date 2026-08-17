@@ -45,8 +45,49 @@ export const TrafficProvider = ({ children }) => {
         if (data.type === 'AMBULANCE_DISPATCH') {
           setLiveAmbulances(prev => ({
             ...prev,
-            [data.ambulance_id]: { route: data.route, position: data.route[0], status: data.status, progressPct: 0 }
+            [data.ambulance_id]: { 
+              route: data.route, 
+              position: data.route && data.route.length > 0 ? { lat: data.route[0][1], lng: data.route[0][0] } : null, 
+              status: data.status, 
+              progressPct: 0 
+            }
           }));
+          window.alert(`🚑 Emergency Dispatch: ${data.ambulance_id} is en route. Green corridor activated.`);
+          setAlerts(prev => [{
+             id: `amb-disp-${Date.now()}`,
+             time: new Date().toLocaleTimeString(),
+             title: 'Emergency Vehicle Dispatched',
+             description: `Ambulance ${data.ambulance_id} is en route. Green Corridor tracking activated.`,
+             severity: 'CRITICAL',
+             type: 'GREEN_CORRIDOR',
+             author: 'Dispatch Center',
+             role: 'System',
+             feature: 'Emergency Response',
+             service: 'Green Corridor API',
+             tags: ['Emergency', 'Live']
+          }, ...prev].slice(0, 100));
+
+          setActiveCorridors(prev => [{
+            id: `corridor-${data.ambulance_id}`,
+            active: true,
+            status: 'IN_TRANSIT',
+            vehicleType: 'ambulance',
+            vehicleLabel: 'Critical Care',
+            vehicleId: data.ambulance_id,
+            patientSeverity: 'CRITICAL',
+            etaSeconds: 180,
+            countdownSeconds: 180,
+            destination: 'Nagpur Medical College',
+            origin: 'Dispatch Center',
+            distanceMeters: 4500,
+            routeCongestionPct: 0,
+            roadsideMessage: `Green corridor active for ${data.ambulance_id}`,
+            targetApproach: 'Priority Route',
+            originPos: data.route && data.route.length > 0 ? { lat: data.route[0][1], lng: data.route[0][0] } : null,
+            destPos: data.route && data.route.length > 0 ? { lat: data.route[data.route.length - 1][1], lng: data.route[data.route.length - 1][0] } : null,
+            pathPoints: data.route && data.route.length > 0 ? data.route.map(pt => ({ lat: pt[1], lng: pt[0] })) : null,
+            progressPct: 0
+          }, ...prev]);
         } else if (data.type === 'AMBULANCE_MOVE') {
           setLiveAmbulances(prev => {
             if (!prev[data.ambulance_id]) return prev;
@@ -66,11 +107,27 @@ export const TrafficProvider = ({ children }) => {
             return c;
           }));
         } else if (data.type === 'AMBULANCE_ARRIVED') {
-          setLiveAmbulances(prev => {
-            const next = { ...prev };
-            delete next[data.ambulance_id];
-            return next;
-          });
+          window.alert(`🏁 Ambulance ${data.ambulance_id} has arrived at destination!`);
+          setAlerts(prev => [{
+             id: `amb-arr-${Date.now()}`,
+             time: new Date().toLocaleTimeString(),
+             title: 'Emergency Vehicle Arrived',
+             description: `Ambulance ${data.ambulance_id} has successfully reached its destination.`,
+             severity: 'HEALTHY',
+             type: 'GREEN_CORRIDOR',
+             author: 'Dispatch Center',
+             role: 'System',
+             feature: 'Emergency Response',
+             service: 'Green Corridor API',
+             tags: ['Emergency', 'Arrived']
+          }, ...prev].slice(0, 100));
+          setTimeout(() => {
+            setLiveAmbulances(prev => {
+              const next = { ...prev };
+              delete next[data.ambulance_id];
+              return next;
+            });
+          }, 5000);
         } else if (data.type === 'ML_UPDATE') {
           setLiveMLStats(prev => ({
             ...prev,
@@ -89,7 +146,13 @@ export const TrafficProvider = ({ children }) => {
       }
     };
     
-    return () => ws.close();
+    return () => {
+      if (ws.readyState === 1) { // OPEN
+        ws.close();
+      } else if (ws.readyState === 0) { // CONNECTING
+        ws.onopen = () => ws.close();
+      }
+    };
   }, []);
 
   const [activeMapElementId, setActiveMapElementId] = useState(null);
@@ -229,7 +292,7 @@ export const TrafficProvider = ({ children }) => {
              service: 'Backend API',
              tags: ['Backend', a.direction]
            }));
-           setAlerts(mappedAlerts);
+           setAlerts(prev => [...mappedAlerts, ...prev].slice(0, 100));
         }
 
       } catch (err) {
@@ -241,7 +304,11 @@ export const TrafficProvider = ({ children }) => {
     wsRef.current = ws;
 
     return () => {
-      ws.close();
+      if (ws.readyState === 1) { // OPEN
+        ws.close();
+      } else if (ws.readyState === 0) { // CONNECTING
+        ws.onopen = () => ws.close();
+      }
     };
   }, [selectedJunctionId]);
 

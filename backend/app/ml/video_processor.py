@@ -47,6 +47,7 @@ class VideoSourceConfig:
     roi_config_path: str | None = None
     camera_name: str | None = None
     loop_video: bool = True  # Loop MP4 files for continuous demo
+    frame_skip: int = 0  # Number of frames to drop before processing one
 
     @property
     def display_name(self) -> str:
@@ -281,6 +282,13 @@ class VideoProcessor:
             return None
 
         try:
+            # Skip frames for faster processing
+            if hasattr(state.config, 'frame_skip') and state.config.frame_skip > 0:
+                for _ in range(state.config.frame_skip):
+                    if not state.capture.grab():
+                        return None
+                    state.frame_count += 1
+
             ret, frame = state.capture.read()
             if not ret or frame is None:
                 return None

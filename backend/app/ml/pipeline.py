@@ -467,6 +467,7 @@ class TrafficMLPipeline:
                 junction_id=junction_id,
                 target_fps=self._settings.processing_fps,
                 loop_video=False,
+                frame_skip=4,
             )
         )
 

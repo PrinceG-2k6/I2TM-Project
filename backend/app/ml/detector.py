@@ -94,18 +94,22 @@ class YOLODetector:
         return (x1 + x2) / 2.0, (y1 + y2) / 2.0
 
     def get_class_name(self, class_id: int, bbox: Tuple[int, int, int, int] = None, frame_height: int = 1080) -> str:
-        # COCO class IDs: 2=car, 3=motorcycle, 5=bus, 7=truck
-        # We also want to detect autorickshaws and ambulances eventually.
-        coco_map = {
-            2: "car",
-            3: "motorcycle",
-            5: "bus",
-            7: "truck",
-            0: "person",
-            1: "bicycle"
-        }
-        name = coco_map.get(class_id, self.model.names.get(class_id, "unknown"))
+        name = self.model.names.get(class_id, "unknown").lower()
         return name
+
+    def estimate_vehicle_type(self, bbox: Tuple[int, int, int, int], frame_height: int) -> str:
+        """Estimate vehicle type based on bounding box dimensions."""
+        w = bbox[2] - bbox[0]
+        h = bbox[3] - bbox[1]
+        area = w * h
+        aspect_ratio = w / float(h) if h > 0 else 1.0
+        
+        # Simple heuristic based on bbox size and shape
+        if area > (frame_height * frame_height * 0.05):
+            return "bus" if aspect_ratio < 1.0 else "truck"
+        elif area < (frame_height * frame_height * 0.01) and aspect_ratio < 0.8:
+            return "motorcycle"
+        return "car"
 
     def _calculate_iou(self, box1: Tuple[int, int, int, int], box2: Tuple[int, int, int, int]) -> float:
         x_left = max(box1[0], box2[0])
@@ -128,16 +132,14 @@ class YOLODetector:
             return []
 
         start_time = time.time()
-        # COCO traffic classes: 0:person, 1:bicycle, 2:car, 3:motorcycle, 5:bus, 7:truck
-        traffic_classes = [0, 1, 2, 3, 5, 7]
         try:
+            # We don't filter classes here because the model is trained specifically on AIC21 traffic.
             results = self.model.predict(
                 frame,
                 conf=self.confidence,
                 iou=self.iou_threshold,
                 imgsz=self.imgsz,
                 device=self._device,
-                classes=traffic_classes,
                 verbose=False
             )
         except RuntimeError as e:

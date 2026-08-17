@@ -32,10 +32,10 @@ class MLSettings(BaseSettings):
     speed_scale_factor: float = 0.05
 
     # Anomaly Detection Defaults
-    anomaly_heading_variance_threshold: float = 30.0
-    anomaly_lateral_deviation_threshold: float = 50.0
+    anomaly_heading_variance_threshold: float = 60.0
+    anomaly_lateral_deviation_threshold: float = 120.0
     anomaly_min_track_age: int = 10
-    anomaly_trajectory_window: int = 15
+    anomaly_trajectory_window: int = 25
 
     # Congestion and Density Scoring
     density_low_threshold: float = 0.3

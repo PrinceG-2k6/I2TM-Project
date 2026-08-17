@@ -25,7 +25,8 @@ def get_simulation_dashboard(junction_id: str) -> dict:
 
 @router.websocket("/live/{junction_id}")
 async def live_simulation_dashboard(websocket: WebSocket, junction_id: str) -> None:
-    await websocket.accept()
+    from app.ws.hub import manager
+    await manager.connect(websocket)
     try:
         while True:
             message = await websocket.receive_text()
@@ -42,7 +43,7 @@ async def live_simulation_dashboard(websocket: WebSocket, junction_id: str) -> N
                 await websocket.close()
                 break
     except WebSocketDisconnect:
-        return
+        manager.disconnect(websocket)
 
 
 from fastapi import File, Form, UploadFile
