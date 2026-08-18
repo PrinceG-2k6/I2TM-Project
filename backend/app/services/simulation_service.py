@@ -118,7 +118,7 @@ async def simulate_video_processing(junction_id: str, device_id: str, video_path
         # while downloading YOLO weights
         def init_pipeline():
             # Use user's trained model
-            p = TrafficMLPipeline(model_path="app/models/best_final.pt")
+            p = TrafficMLPipeline(model_path="app/models/best.pt")
             p.setup()
             return p
             
@@ -141,7 +141,10 @@ async def simulate_video_processing(junction_id: str, device_id: str, video_path
         
         def run_pipeline():
             try:
-                for res in pipeline.run_on_video(video_path, junction_id=junction_id, max_frames=None):
+                # Run the full ML pipeline on the video
+                # We cap max_frames to 300 so the simulation doesn't run for 20 minutes on a long video
+                # We skip frames for speed
+                for res in pipeline.run_on_video(video_path, junction_id=junction_id, max_frames=300):
                     q.put(("data", res))
                 q.put(("done", None))
             except Exception as e:
@@ -182,6 +185,7 @@ async def simulate_video_processing(junction_id: str, device_id: str, video_path
         logger.info(f"Video processing complete for {device_id}")
     except Exception as e:
         err_trace = traceback.format_exc()
+        print(f"CRITICAL ML ERROR: {e}\n{err_trace}", flush=True)
         logger.error(f"Error in simulate_video_processing: {e}\n{err_trace}")
         await manager.broadcast({
             "type": "ML_ERROR",

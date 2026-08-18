@@ -50,6 +50,17 @@ class TrajectoryAnomalyDetector:
         # Average speed of all tracked vehicles for excessive speed detection
         self.average_speed: float = 0.0
 
+        # Load Isolation Forest Model
+        import joblib
+        import os
+        model_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'anomaly_iforest.pkl')
+        try:
+            self.ml_model = joblib.load(model_path)
+            logger.info("Loaded IsolationForest Anomaly Detection Model")
+        except Exception as e:
+            logger.warning(f"Failed to load anomaly ML model: {e}")
+            self.ml_model = None
+
     @property
     def active_tracks(self) -> int:
         """Returns the number of tracks being monitored."""
@@ -85,55 +96,86 @@ class TrajectoryAnomalyDetector:
         trajectory = list(self._buffers[track_id])
         anomalies: list[tuple[AnomalyType, float, float, str]] = []
 
-        # --- Check ZIGZAG ---
-        is_zigzag, conf = self._detect_zigzag(trajectory)
-        if is_zigzag:
-            anomalies.append((
-                AnomalyType.ZIGZAG_MOVEMENT,
-                conf,
-                max(0.0, min(10.0, 6.0 + (conf * 4.0))),
-                "Zig-zag movement detected — possible impaired driving",
-            ))
+        if hasattr(self, 'ml_model') and self.ml_model is not None:
+            # 1. Extract Features: [avg_speed, max_acceleration, heading_variance, lateral_deviation]
+            speeds = [t[3] for t in trajectory if t[3] is not None]
+            headings = [t[4] for t in trajectory if t[4] is not None]
+            
+            avg_speed = sum(speeds) / len(speeds) if speeds else 0.0
+            
+            # calculate max acceleration
+            max_accel = 0.0
+            if len(speeds) >= 2:
+                for i in range(1, len(speeds)):
+                    accel = abs(speeds[i] - speeds[i-1]) # simplified accel
+                    if accel > max_accel: max_accel = accel
+            
+            # heading variance
+            if len(headings) >= 2:
+                mean_heading = sum(headings) / len(headings)
+                heading_var = sum((h - mean_heading) ** 2 for h in headings) / len(headings)
+            else:
+                heading_var = 0.0
+                
+            # lateral dev (simplified)
+            lat_dev = 0.0
+            if len(trajectory) >= 3:
+                # distance from straight line between start and end
+                start = trajectory[0]
+                end = trajectory[-1]
+                dx = end[1] - start[1]
+                dy = end[2] - start[2]
+                length_sq = dx*dx + dy*dy
+                if length_sq > 0:
+                    for t in trajectory[1:-1]:
+                        px = t[1]
+                        py = t[2]
+                        # cross product distance
+                        dev = abs(dy*px - dx*py + end[1]*start[2] - end[2]*start[1]) / math.sqrt(length_sq)
+                        if dev > lat_dev: lat_dev = dev
 
-        # --- Check SUDDEN LANE CHANGE ---
-        is_lane_change, conf = self._detect_sudden_lane_change(trajectory)
-        if is_lane_change:
-            anomalies.append((
-                AnomalyType.SUDDEN_LANE_CHANGE,
-                conf,
-                max(0.0, min(10.0, 5.0 + (conf * 5.0))),
-                "Sudden lane change (cut maarna) — unsafe maneuver",
-            ))
-
-        # --- Check WRONG SIDE ---
-        is_wrong_side, conf = self._detect_wrong_side(trajectory, self.expected_heading_range)
-        if is_wrong_side:
-            anomalies.append((
-                AnomalyType.WRONG_SIDE_DRIVING,
-                conf,
-                9.0,
-                "Wrong-side driving detected — extreme risk",
-            ))
-
-        # --- Check ABRUPT STOP ---
-        is_abrupt_stop, conf = self._detect_abrupt_stop(trajectory)
-        if is_abrupt_stop:
-            anomalies.append((
-                AnomalyType.ABRUPT_STOP,
-                conf,
-                4.0,
-                "Vehicle stopped abruptly — possible incident or breakdown",
-            ))
-
-        # --- Check EXCESSIVE SPEED ---
-        is_excessive, conf = self._detect_excessive_speed(trajectory)
-        if is_excessive:
-            anomalies.append((
-                AnomalyType.EXCESSIVE_SPEED,
-                conf,
-                min(10.0, 5.0 + (conf * 2.0)),
-                "Excessive speed relative to traffic flow",
-            ))
+            features = np.array([[avg_speed, max_accel, heading_var, lat_dev]])
+            
+            # Skip prediction for extremely slow/stationary vehicles where jitter dominates
+            if avg_speed < 10.0:
+                prediction = 1
+            else:
+                # 2. Predict with ML Model
+                prediction = self.ml_model.predict(features)[0] # -1 for anomaly, 1 for normal
+            
+            if prediction == -1:
+                # determine type based on features
+                if heading_var > 30:
+                    atype = AnomalyType.ZIGZAG_MOVEMENT
+                    desc = "Zig-zag movement detected by ML Model"
+                elif avg_speed > 90:
+                    atype = AnomalyType.EXCESSIVE_SPEED
+                    desc = "Excessive speed detected by ML Model"
+                elif max_accel > 10:
+                    atype = AnomalyType.ABRUPT_STOP
+                    desc = "Abrupt speed change detected by ML Model"
+                else:
+                    atype = AnomalyType.SUDDEN_LANE_CHANGE
+                    desc = "Anomalous trajectory detected by ML Model"
+                    
+                # score from decision function
+                score = self.ml_model.decision_function(features)[0]
+                conf = min(0.95, max(0.5, abs(score)))
+                risk = 8.0
+                
+                anomalies.append((atype, conf, risk, desc))
+                
+        else:
+            # Fallback to old heuristics if model failed to load
+            is_zigzag, conf = self._detect_zigzag(trajectory)
+            if is_zigzag:
+                anomalies.append((AnomalyType.ZIGZAG_MOVEMENT, conf, max(0.0, min(10.0, 6.0 + (conf * 4.0))), "Zig-zag movement detected"))
+            is_lane_change, conf = self._detect_sudden_lane_change(trajectory)
+            if is_lane_change:
+                anomalies.append((AnomalyType.SUDDEN_LANE_CHANGE, conf, max(0.0, min(10.0, 5.0 + (conf * 5.0))), "Sudden lane change"))
+            is_excessive, conf = self._detect_excessive_speed(trajectory)
+            if is_excessive:
+                anomalies.append((AnomalyType.EXCESSIVE_SPEED, conf, min(10.0, 5.0 + (conf * 2.0)), "Excessive speed"))
 
         if not anomalies:
             return None

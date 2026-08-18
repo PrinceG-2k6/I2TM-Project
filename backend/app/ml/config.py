@@ -43,23 +43,16 @@ class MLSettings(BaseSettings):
     congestion_warning_threshold: float = 1.9
     congestion_critical_threshold: float = 2.6
 
-    # Class Names
+    # Class Names (Matching the HuggingFace Indian Vehicle Model)
     class_names: Dict[int, str] = {
-        0: "person",
-        1: "bicycle",
+        0: "auto",
+        1: "bus",
         2: "car",
-        3: "motorcycle",
-        4: "airplane",
-        5: "bus",
-        6: "train",
-        7: "truck",
-        8: "boat",
-        9: "traffic light",
-        10: "fire hydrant",
-        11: "stop sign",
-        12: "parking meter",
-        13: "bench",
-        14: "autorickshaw"
+        3: "lcv",
+        4: "motorcycle",
+        5: "multiaxle",
+        6: "tractor",
+        7: "truck"
     }
 
     # Region of Interest

@@ -52,16 +52,17 @@ import shutil
 import os
 
 @router.post("/process-video", status_code=status.HTTP_200_OK)
-def process_video_simulation(
+async def process_video_simulation(
     background_tasks: BackgroundTasks,
     junction_id: str = Form(...),
     device_id: str = Form(...),
     video: UploadFile = File(...),
 ) -> dict:
     from app.services.simulation_service import simulate_video_processing
-    # Save to temp file
+    # Save to temp file asynchronously
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
-    shutil.copyfileobj(video.file, temp_file)
+    content = await video.read()
+    temp_file.write(content)
     temp_file.close()
     
     background_tasks.add_task(simulate_video_processing, junction_id, device_id, temp_file.name)

@@ -97,20 +97,6 @@ class YOLODetector:
         name = self.model.names.get(class_id, "unknown").lower()
         return name
 
-    def estimate_vehicle_type(self, bbox: Tuple[int, int, int, int], frame_height: int) -> str:
-        """Estimate vehicle type based on bounding box dimensions."""
-        w = bbox[2] - bbox[0]
-        h = bbox[3] - bbox[1]
-        area = w * h
-        aspect_ratio = w / float(h) if h > 0 else 1.0
-        
-        # Simple heuristic based on bbox size and shape
-        if area > (frame_height * frame_height * 0.05):
-            return "bus" if aspect_ratio < 1.0 else "truck"
-        elif area < (frame_height * frame_height * 0.01) and aspect_ratio < 0.8:
-            return "motorcycle"
-        return "car"
-
     def _calculate_iou(self, box1: Tuple[int, int, int, int], box2: Tuple[int, int, int, int]) -> float:
         x_left = max(box1[0], box2[0])
         y_top = max(box1[1], box2[1])

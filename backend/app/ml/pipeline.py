@@ -250,8 +250,6 @@ class TrafficMLPipeline:
 
             # Determine vehicle class name
             class_name = td.class_name
-            if class_name == "vehicle" and self._detector._is_single_class:
-                class_name = self._detector.estimate_vehicle_type(td.bbox, h)
 
             enriched_detections.append(
                 Detection(
@@ -334,8 +332,8 @@ class TrafficMLPipeline:
             cars=class_counts.get("car", 0),
             motorcycles=class_counts.get("motorcycle", 0),
             buses=class_counts.get("bus", 0),
-            trucks=class_counts.get("truck", 0),
-            autorickshaws=class_counts.get("autorickshaw", 0),
+            trucks=class_counts.get("truck", 0) + class_counts.get("lcv", 0) + class_counts.get("multiaxle", 0) + class_counts.get("tractor", 0),
+            autorickshaws=class_counts.get("autorickshaw", 0) + class_counts.get("auto", 0),
             persons=class_counts.get("person", 0),
         )
 
