@@ -17,6 +17,7 @@ typing-inspection==0.4.4
 typing_extensions==4.16.0
 uvicorn==0.52.3
 httpx==0.28.1
+python-multipart
 pytest==8.3.4
 
 # ─── ML Pipeline ───
